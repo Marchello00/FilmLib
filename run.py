@@ -19,8 +19,8 @@ def load_config(config_path):
 def main():
     args = parse_args()
     configs = load_config(args.config)
-    app.init_bot(configs['telegram_token'])
-    app.init_omdb(configs['omdb_apikey'])
+    app.init(token=configs['telegram_token'], apikey=configs['omdb_apikey'])
+    app.converter.get_russian('Аватар')
 
 
 if __name__ == '__main__':

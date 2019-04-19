@@ -27,7 +27,7 @@ class OMDB:
         :param tp: Type: movie, series, episode
         :return: Information about the film found (in JSON)
         """
-        url = self._get_query(title=name, year=year, type=tp)
+        url = self.__get_url(title=name, year=year, type=tp)
         r = requests.get(url)
         return json.loads(r.text)
 
@@ -39,7 +39,7 @@ class OMDB:
         :param tp: Type: movie, series, episode
         :return: Information about the films found (in JSON)
         """
-        url = self._get_query(search=search, year=year, type=tp)
+        url = self.__get_url(search=search, year=year, type=tp)
         print(url)
         r = requests.get(url)
         return json.loads(r.text)
@@ -50,15 +50,15 @@ class OMDB:
         :param film_id: IMDBid
         :return: Information about the film found (in JSON)
         """
-        url = self._get_query(id=film_id)
+        url = self.__get_url(id=film_id)
         r = requests.get(url)
         return json.loads(r.text)
 
-    def _get_query(self, **kwargs):
-        query = self.__site
-        if query[-1] != '/':
-            query += '/'
-        query += '?'
+    def __get_url(self, **kwargs):
+        url = self.__site
+        if url[-1] != '/':
+            url += '/'
+        url += '?'
         if 'apikey' not in kwargs:
             kwargs.update({'apikey': self.__apikey})
         for key, val in kwargs.items():
@@ -66,6 +66,6 @@ class OMDB:
                 raise AttributeError("No such attribute (check OMDB.args)")
             if not val:
                 val = ""
-            query += '{param}={val}&'.format(param=self.__args[key],
-                                             val=str(val))
-        return query
+            url += '{param}={val}&'.format(param=self.__args[key],
+                                           val=str(val))
+        return url
