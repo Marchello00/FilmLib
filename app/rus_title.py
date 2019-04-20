@@ -1,7 +1,6 @@
 import bs4
 import requests
 import re
-from app import omdb
 
 
 class Converter:
@@ -78,5 +77,6 @@ class FilmRus:
         raise AttributeError
 
     def get_omdb(self):
+        from app import omdb
         return omdb.get_film(name=self.title, year=self.year,
                              tp=self.type_omdb)

@@ -6,7 +6,9 @@ import json
 def parse_args():
     parser = argparse.ArgumentParser(description='Film Library telegram bot')
     parser.add_argument('--config', '-c', default='config.json',
-                        help="path to your config.json file (README)")
+                        help='path to your config.json file (README)')
+    parser.add_argument('--debug', '-d', action='store_true',
+                        help='debug mode')
     return parser.parse_args()
 
 
@@ -20,7 +22,7 @@ def main():
     args = parse_args()
     configs = load_config(args.config)
     app.init(token=configs['telegram_token'], apikey=configs['omdb_apikey'])
-    print(app.converter.get_russian('Кредо убийцы')[0].get_omdb())
+    app.bot.run(debug=args.debug)
 
 
 if __name__ == '__main__':
