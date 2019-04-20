@@ -1,6 +1,7 @@
 import app
 import argparse
 import json
+import asyncio
 
 
 def parse_args():
@@ -18,11 +19,28 @@ def load_config(config_path):
         return s
 
 
+async def start():
+    await app.bot.loop()
+
+
+async def stop():
+    app.bot.stop()
+
+
 def main():
     args = parse_args()
     configs = load_config(args.config)
     app.init(token=configs['telegram_token'], apikey=configs['omdb_apikey'])
-    app.bot.run(debug=args.debug)
+    if args.debug:
+        app.bot.run(debug=True)
+    else:
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(start())
+        except KeyboardInterrupt:
+            pass
+        finally:
+            loop.run_until_complete(stop())
 
 
 if __name__ == '__main__':

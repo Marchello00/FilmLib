@@ -46,7 +46,7 @@ class OMDB:
         :param name: Film title
         :param year: Film year
         :param tp: Type: movie, series, episode
-        :return: Information about the film found
+        :return: Information about the film found (FilmOMDB)
         """
         url = self.__get_url(title=name, year=year, type=tp)
         r = requests.get(url)
@@ -58,7 +58,7 @@ class OMDB:
         :param search: Keywords
         :param year: Film year
         :param tp: Type: movie, series, episode
-        :return: Information about the films found
+        :return: Information about the films found (FilmOMDB)
         """
         url = self.__get_url(search=search, year=year, type=tp)
         print(url)
@@ -69,7 +69,7 @@ class OMDB:
         """
         Search movie by IMDBid's
         :param film_id: IMDBid
-        :return: Information about the film found
+        :return: Information about the film found (FilmOMDB)
         """
         url = self.__get_url(id=film_id)
         r = requests.get(url)
