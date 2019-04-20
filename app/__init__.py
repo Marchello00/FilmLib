@@ -1,23 +1,25 @@
 import aiotg as tg
-from app import omdb_api, rus_title
+from app import omdb_api
 
-omdb = None
-bot = None
-converter = None
+omdb = omdb_api.OMDB('')
+bot = tg.Bot('')
+
+from app import rus_title
+
+converter = rus_title.Converter()
 
 
 def init_omdb(apikey):
     global omdb
-    omdb = omdb_api.OMDB(apikey)
+    omdb.set_apikey(apikey)
 
 
 def init_bot(token):
     global bot
-    bot = tg.Bot(token)
+    bot.api_token = token
 
 
 def init(apikey, token):
     global converter
     init_omdb(apikey)
     init_bot(token)
-    converter = rus_title.Converter()

@@ -2,6 +2,27 @@ import requests
 import json
 
 
+class FilmOMDB:
+    def __init__(self, dct=None):
+        dct = {key.lower(): value for key, value in dct.items()}
+        self.__dict__.update(dct)
+
+    def __getattr__(self, item):
+        if item in self.__dct:
+            return self.__dct[item]
+        raise AttributeError
+
+    def __repr__(self):
+        text = ''
+        for param in self.__dict__:
+            if not callable(param) and not param.startswith('_'):
+                text += '{name}: {value}\n'.format(
+                    name=param,
+                    value=getattr(self, param)
+                )
+        return text
+
+
 class OMDB:
     # dict { <alias> : <real param name> }
     __args = {
@@ -25,11 +46,11 @@ class OMDB:
         :param name: Film title
         :param year: Film year
         :param tp: Type: movie, series, episode
-        :return: Information about the film found (in JSON)
+        :return: Information about the film found
         """
         url = self.__get_url(title=name, year=year, type=tp)
         r = requests.get(url)
-        return json.loads(r.text)
+        return FilmOMDB(json.loads(r.text))
 
     def search_film(self, search, year=None, tp=None):
         """
@@ -37,22 +58,22 @@ class OMDB:
         :param search: Keywords
         :param year: Film year
         :param tp: Type: movie, series, episode
-        :return: Information about the films found (in JSON)
+        :return: Information about the films found
         """
         url = self.__get_url(search=search, year=year, type=tp)
         print(url)
         r = requests.get(url)
-        return json.loads(r.text)
+        return FilmOMDB(json.loads(r.text))
 
     def get_by_id(self, film_id):
         """
         Search movie by IMDBid's
         :param film_id: IMDBid
-        :return: Information about the film found (in JSON)
+        :return: Information about the film found
         """
         url = self.__get_url(id=film_id)
         r = requests.get(url)
-        return json.loads(r.text)
+        return FilmOMDB(json.loads(r.text))
 
     def __get_url(self, **kwargs):
         url = self.__site
@@ -69,3 +90,6 @@ class OMDB:
             url += '{param}={val}&'.format(param=self.__args[key],
                                            val=str(val))
         return url
+
+    def set_apikey(self, apikey):
+        self.__apikey = apikey
