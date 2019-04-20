@@ -17,6 +17,7 @@ def init_bot(token):
 
 
 def init(apikey, token):
+    global converter
     init_omdb(apikey)
     init_bot(token)
     converter = rus_title.Converter()

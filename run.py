@@ -20,7 +20,7 @@ def main():
     args = parse_args()
     configs = load_config(args.config)
     app.init(token=configs['telegram_token'], apikey=configs['omdb_apikey'])
-    app.converter.get_russian('Аватар')
+    print(app.converter.get_russian('Карты, деньги, два ствола'))
 
 
 if __name__ == '__main__':
