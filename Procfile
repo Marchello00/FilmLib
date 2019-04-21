@@ -1,2 +1,2 @@
 bot: python3 run.py -d
-db: db_create.py
+db: python3 db_create.py
