@@ -22,7 +22,9 @@ def init_bot(token):
 
 def init_db(db_url):
     global engine
-    engine = create_engine(db_url)
+    engine = create_engine(db_url, echo=True)
+    from app import models
+    models.Base.metadata.create_all(engine)
 
 
 def init(configs: dict):

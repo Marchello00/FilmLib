@@ -49,8 +49,6 @@ def main():
         print('Failed to load config')
         return
     app.init(configs)
-    if args.local:
-        return
     if args.debug:
         app.bot.run(debug=True)
     else:
