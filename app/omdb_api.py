@@ -63,7 +63,7 @@ class OMDB:
         url = self.__get_url(search=search, year=year, type=tp)
         print(url)
         r = requests.get(url)
-        return FilmOMDB(json.loads(r.text))
+        return [FilmOMDB(film) for film in json.loads(r.text)['Search']]
 
     def get_by_id(self, film_id):
         """

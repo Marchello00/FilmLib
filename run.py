@@ -7,10 +7,12 @@ import os
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Film Library telegram bot')
-    parser.add_argument('--config', '-c', default='config.json',
+    parser.add_argument('--config', '-c',
                         help='path to your config.json file (README)')
     parser.add_argument('--debug', '-d', action='store_true',
                         help='debug mode')
+    parser.add_argument('--local', '-l', action='store_true',
+                        help='DEBUG ONLY, use it for testing')
     return parser.parse_args()
 
 
@@ -22,8 +24,9 @@ def load_config_file(config_path):
 
 def load_config_environ():
     return {
-        'telegram_token': os.environ.get('TOKEN'),
-        'omdb_apikey': os.environ.get('APIKEY')
+        'token': os.environ.get('TOKEN'),
+        'apikey': os.environ.get('APIKEY'),
+        'db_url': os.environ.get('DATABASE_URL')
     }
 
 
@@ -37,9 +40,17 @@ async def stop():
 
 def main():
     args = parse_args()
-    # configs = load_config(args.config)
-    configs = load_config_environ()
-    app.init(token=configs['telegram_token'], apikey=configs['omdb_apikey'])
+    try:
+        if args.config:
+            configs = load_config_file(args.config)
+        else:
+            configs = load_config_environ()
+    except Exception:
+        print('Failed to load config')
+        return
+    app.init(configs)
+    if args.local:
+        return
     if args.debug:
         app.bot.run(debug=True)
     else:

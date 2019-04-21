@@ -10,4 +10,5 @@
  $ heroku logs --tail -a my-film-bot
  $ heroku ps:stop bot -a my-film-bot
 ```
- 
+ ## Create DB
+ Run before starting film bot
