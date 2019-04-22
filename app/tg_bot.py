@@ -22,4 +22,4 @@ async def search_films(chat: Chat, match):
     for film in films:
         if not film.poster:
             continue
-        chat.send_photo(photo=film.url, caption=get_film_desc(film))
+        chat.send_photo(photo=film.poster, caption=get_film_desc(film))
