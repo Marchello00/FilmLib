@@ -10,7 +10,7 @@ class DB:
         'year': 'year',
         'img': 'poster',
         'title': 'title',
-        'tp': 'type'
+        'type': 'type'
     }
     Session = None
 
@@ -19,7 +19,8 @@ class DB:
         for res in q:
             films.append(FilmOMDB({
                 self.__convert[key]: value for key, value in
-                res.__dict__.items() if not callable(key)
+                res.__dict__.items() if
+                not callable(key) and not key.startswith('_')
             }))
         return films
 
@@ -28,65 +29,83 @@ class DB:
 
     def film_in_db(self, film_id):
         session = self.Session()
-        return bool(session.query(md.Film).filter(md.Film.id == film_id).all())
+        return bool(
+            session.query(md.Film).filter(md.Film.imdbid == film_id).all())
+
+    def film_in_chat_db(self, chat_id, film_id, favourite=None, watched=None):
+        session = self.Session()
+        q = session.query(md.Film).join(md.ChatXFilm).filter(
+            sa.and_(md.Film.imdbid == film_id,
+                    md.ChatXFilm.chat_id == chat_id))
+        if favourite:
+            q = q.filter(md.ChatXFilm.favourite == favourite)
+        if watched:
+            q = q.filter(md.ChatXFilm.watched == watched)
+        return bool(q.all())
 
     def get_films_by_chat(self, chat_id, favourite=None, watched=None):
         session = self.Session()
-        q = session.query(md.Film).join(md.ChatXFim).filter(
-            md.ChatXFim.chat_id == chat_id)
+        q = session.query(md.Film).join(md.ChatXFilm).filter(
+            md.ChatXFilm.chat_id == chat_id)
         if favourite is not None:
-            q = q.filter(md.ChatXFim.favourite)
+            q = q.filter(md.ChatXFilm.favourite)
         if watched is not None:
-            q = q.filter(md.ChatXFim.watched == watched)
+            q = q.filter(md.ChatXFilm.watched == watched)
         return self.__film_from_query(q)
 
     def insert_film(self, film):
         session = self.Session()
         if not self.film_in_db(film.imdbid):
-            ins_film = md.Film(id=film.imdbid, year=film.year, img=film.poster,
-                               title=film.title, tp=film.type)
+            data = {key: value for key, value in film.__dict__
+                    if key in md.Film.__dict__ and
+                    not key.startswith('_') and
+                    not callable(key)}
+            # ins_film = md.Film(imdbid=film.imdbid, year=film.year,
+            #                    poster=film.poster, title=film.title,
+            #                    type=film.type)
+            ins_film = md.Film(**data)
             session.add(ins_film)
             session.commit()
 
     def add_dependence(self, chat_id, film_id):
         session = self.Session()
-        dep = md.ChatXFim(chat_id=chat_id, film_id=film_id)
+        dep = md.ChatXFilm(chat_id=chat_id, film_id=film_id)
         session.add(dep)
         session.commit()
 
     def del_dependence(self, chat_id, film_id):
         session = self.Session()
-        dep = session.query(md.ChatXFim).filter(
-            sa.and_(md.ChatXFim.film_id == film_id,
-                    md.ChatXFim.chat_id == chat_id)).first()
+        dep = session.query(md.ChatXFilm).filter(
+            sa.and_(md.ChatXFilm.film_id == film_id,
+                    md.ChatXFilm.chat_id == chat_id)).first()
         if dep:
             session.delete(dep)
             session.commit()
 
     def get_films_by_title(self, title, year=None, chat_id=None):
         session = self.Session()
-        q = session.query(md.Film).join(md.ChatXFim).filter(
+        q = session.query(md.Film).join(md.ChatXFilm).filter(
             md.Film.title == title)
         if year:
             q = q.filter(md.Film.year == year)
         if chat_id:
-            q = q.filter(md.ChatXFim.chat_id == chat_id)
+            q = q.filter(md.ChatXFilm.chat_id == chat_id)
         return self.__film_from_query(q)
 
     def set_favourite(self, chat_id, film_id, favourite):
         session = self.Session()
-        film = session.query(md.ChatXFim).filter(
-            sa.and_(md.ChatXFim.chat_id == chat_id,
-                    md.ChatXFim.film_id == film_id)
+        film = session.query(md.ChatXFilm).filter(
+            sa.and_(md.ChatXFilm.chat_id == chat_id,
+                    md.ChatXFilm.film_id == film_id)
         ).first()
         film.favourite = favourite
         session.commit()
 
     def set_watched(self, chat_id, film_id, watched):
         session = self.Session()
-        film = session.query(md.ChatXFim).filter(
-            sa.and_(md.ChatXFim.chat_id == chat_id,
-                    md.ChatXFim.film_id == film_id)
+        film = session.query(md.ChatXFilm).filter(
+            sa.and_(md.ChatXFilm.chat_id == chat_id,
+                    md.ChatXFilm.film_id == film_id)
         ).first()
         film.watched = watched
         session.commit()

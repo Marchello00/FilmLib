@@ -14,8 +14,8 @@ class Converter:
     def __init__(self):
         pass
 
-    def get_russian(self, search, tp='movie'):
-        url = self.__get_url(search=search, tp=tp)
+    def get_russian(self, search, tp='movie', lang='ru'):
+        url = self.__get_url(search=search, tp=tp, lang=lang)
         text = requests.get(url).text
         soup = bs4.BeautifulSoup(text, 'lxml')
         results = []
@@ -28,7 +28,7 @@ class Converter:
             film.title = film_info.a['title']
             film.url = self.__site + film_info.a['href']
             film.date = film_info.span.text
-            film.tp = tp
+            film.type = tp
             film.plot = part.find('p', {'class': 'overview'}).text
             results.append(film)
         return results
@@ -53,8 +53,9 @@ class FilmRus:
         self.url = None
         self.date = None
         self.year = None
-        self.tp = None
+        self.type = None
         self.plot = None
+        self.omdb = None
 
     def __repr__(self):
         text = ''
@@ -73,14 +74,25 @@ class FilmRus:
         super().__setattr__(key, value)
 
     def __type_omdb(self):
-        return self.retypes[self.tp]
+        return self.retypes[self.type]
 
     def __getattr__(self, item):
         if item == 'type_omdb':
             return self.__type_omdb()
         raise AttributeError
 
+    def set_omdb(self):
+        from app import omdb
+        if self.omdb:
+            return
+        self.omdb = omdb.get_film(name=self.title, year=self.year,
+                                  tp=self.type_omdb)
+        if not hasattr(self.omdb, 'poster'):
+            self.omdb.poster = self.poster
+
     def get_omdb(self):
         from app import omdb
+        if self.omdb:
+            return self.omdb
         return omdb.get_film(name=self.title, year=self.year,
                              tp=self.type_omdb)

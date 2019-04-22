@@ -4,7 +4,7 @@ import json
 
 class FilmOMDB:
     def __init__(self, dct=None):
-        dct = {key.lower(): value for key, value in dct.items()}
+        self.__dct = {key.lower(): value for key, value in dct.items()}
         self.__dict__.update(dct)
 
     def __getattr__(self, item):

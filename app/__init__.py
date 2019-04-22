@@ -5,7 +5,7 @@ from app import database
 import sqlalchemy as sa
 
 omdb = omdb_api.OMDB('')
-bot = tg.Bot('')
+bot: tg.Bot
 converter = rus_title.Converter()
 db: database.DB
 
@@ -20,7 +20,7 @@ def init_omdb(apikey):
 
 def init_bot(token):
     global bot
-    bot.api_token = token
+    bot = tg.Bot(token)
 
 
 def init_db(db_url):

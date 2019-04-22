@@ -49,9 +49,9 @@ def main():
         print('Failed to load config')
         return
     app.init(configs)
-    if args.local:
-        print(app.omdb.get_film('Avatar'))
-        return
+    # if args.local:
+    #     print(app.omdb.get_film('Avatar'))
+    #     return
     if args.debug:
         app.bot.run(debug=True)
     else:
