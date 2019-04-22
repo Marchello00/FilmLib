@@ -29,6 +29,7 @@ class Converter:
             film.url = self.__site + film_info.a['href']
             film.date = film_info.span.text
             film.tp = tp
+            film.plot = part.find('p', {'class': 'overview'}).text
             results.append(film)
         return results
 
@@ -51,6 +52,7 @@ class FilmRus:
         self.date = None
         self.year = None
         self.tp = None
+        self.plot = None
 
     def __repr__(self):
         text = ''
