@@ -23,7 +23,7 @@ class Converter:
             film = FilmRus()
             img_src = part.find('div', {'class': 'image_content'}).a.img
             if img_src:
-                film.img_src = img_src.get('data-src')
+                film.poster = img_src.get('data-src')
             film_info = part.find('div', {'class': 'flex'})
             film.title = film_info.a['title']
             film.url = self.__site + film_info.a['href']
@@ -33,12 +33,14 @@ class Converter:
             results.append(film)
         return results
 
-    def __get_url(self, search, tp='movie'):
+    def __get_url(self, search, tp='movie', lang='ru'):
         if self.__site[-1] != '/':
             self.__site += '/'
         url = '{site}search/{type}?query={query}'.format(
             site=self.__site, type=tp, query=search
         )
+        if lang:
+            url += '&language={lang}'.format(lang=lang)
         return url
 
 
@@ -47,7 +49,7 @@ class FilmRus:
 
     def __init__(self):
         self.title = None
-        self.img_src = None
+        self.poster = None
         self.url = None
         self.date = None
         self.year = None

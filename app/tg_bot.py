@@ -20,4 +20,6 @@ async def search_films(chat: Chat, match):
     title = match.group(1)
     films = cv.get_russian(title)
     for film in films:
+        if not film.poster:
+            continue
         chat.send_photo(photo=film.url, caption=get_film_desc(film))
