@@ -63,7 +63,8 @@ def add_watched_button(premarkup, index=None, watched=True):
 
 
 class Buttons:
-    __bttns = []
+    def __init__(self):
+        self.__bttns = []
 
     def dbg(self):
         return self.__bttns
