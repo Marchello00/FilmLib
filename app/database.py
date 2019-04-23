@@ -18,7 +18,7 @@ class DB:
         films = []
         for res in q:
             films.append(FilmOMDB({
-                self.__convert[key]: value for key, value in
+                key: value for key, value in
                 res.__dict__.items() if
                 not callable(key) and not key.startswith('_')
             }))
@@ -29,8 +29,10 @@ class DB:
 
     def film_in_db(self, film_id):
         session = self.Session()
-        return bool(
+        ret = bool(
             session.query(md.Film).filter(md.Film.imdbid == film_id).all())
+        session.close()
+        return ret
 
     def film_in_chat_db(self, chat_id, film_id, favourite=None, watched=None):
         session = self.Session()
@@ -41,7 +43,9 @@ class DB:
             q = q.filter(md.ChatXFilm.favourite == favourite)
         if watched:
             q = q.filter(md.ChatXFilm.watched == watched)
-        return bool(q.all())
+        ret = bool(q.all())
+        session.close()
+        return ret
 
     def get_films_by_chat(self, chat_id, favourite=None, watched=None):
         session = self.Session()
@@ -51,7 +55,9 @@ class DB:
             q = q.filter(md.ChatXFilm.favourite)
         if watched is not None:
             q = q.filter(md.ChatXFilm.watched == watched)
-        return self.__film_from_query(q)
+        ret = self.__film_from_query(q)
+        session.close()
+        return ret
 
     def insert_film(self, film):
         session = self.Session()
@@ -63,12 +69,14 @@ class DB:
             ins_film = md.Film(**data)
             session.add(ins_film)
             session.commit()
+        session.close()
 
     def add_dependence(self, chat_id, film_id):
         session = self.Session()
         dep = md.ChatXFilm(chat_id=chat_id, film_id=film_id)
         session.add(dep)
         session.commit()
+        session.close()
 
     def del_dependence(self, chat_id, film_id):
         session = self.Session()
@@ -78,6 +86,7 @@ class DB:
         if dep:
             session.delete(dep)
             session.commit()
+        session.close()
 
     def get_films_by_title(self, title, year=None, chat_id=None):
         session = self.Session()
@@ -87,7 +96,9 @@ class DB:
             q = q.filter(md.Film.year == year)
         if chat_id:
             q = q.filter(md.ChatXFilm.chat_id == chat_id)
-        return self.__film_from_query(q)
+        ret = self.__film_from_query(q)
+        session.close()
+        return ret
 
     def set_favourite(self, chat_id, film_id, favourite):
         session = self.Session()
@@ -97,6 +108,7 @@ class DB:
         ).first()
         film.favourite = favourite
         session.commit()
+        session.close()
 
     def set_watched(self, chat_id, film_id, watched):
         session = self.Session()
@@ -106,3 +118,4 @@ class DB:
         ).first()
         film.watched = watched
         session.commit()
+        session.close()
