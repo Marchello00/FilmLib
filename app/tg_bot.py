@@ -33,44 +33,49 @@ async def search_films(chat: Chat, match):
 
 @bot.callback(r'\+(.+)')
 def add_to_favourite(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=answers.OLD_MSG)
     index = int(match.group(1))
     film = film_lists[chat.id][index]
-    if db.film_in_chat_db(chat.id, film.imdbid, favourite=True):
-        return cq.answer(text=answers.FILM_ALREADY_IN_DB,
-                         show_alert='true')
-        # return bot.api_call('answerCallbackQuery',
-        #                     text=answers.FILM_ALREADY_IN_DB,
-        #                     show_alert='true')
     if not db.film_in_db(chat.id):
-        db.insert_film(film)
-    db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
-    return cq.answer(text=answers.FILM_ADDED_TO_DB,
-                     ahow_alert='true')
-    # return bot.api_call('answerCallbackQuery',
-    #                     text=answers.FILM_ADDED_TO_DB,
-    #                     show_alert='true')
+        db.insert_film(film.omdb)
+    if db.film_in_chat_db(chat.id, film.omdb.imdbid, favourite=True):
+        return cq.answer(text=answers.FILM_ALREADY_IN_DB)
+    db.add_dependence(chat_id=chat.id, film_id=film.omdb.imdbid)
+    return cq.answer(text=answers.FILM_ADDED_TO_DB)
 
 
 @bot.callback(r'<(.+)')
 async def show_prev_film(chat: Chat, cq, match):
-    if cq['message'] != last_film_msg[chat.id]:
-        return cq.answer()
+    if not check_callback(chat, cq):
+        return cq.answer(text=answers.OLD_MSG)
     index = int(match.group(1)) - 1
-    return await show_film(chat, index)
+    return await show_film(chat, index, get_mes_id_from_cq(cq))
 
 
 @bot.callback(r'>(.+)')
 async def show_next_film(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=answers.OLD_MSG)
     index = int(match.group(1)) + 1
-    return await show_film(chat, index)
+    return await show_film(chat, index, get_mes_id_from_cq(cq))
 
 
 @bot.callback(r'\?(.+)')
 async def show_more(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=answers.OLD_MSG)
     index = int(match.group(1))
     film = film_lists[chat.id][index].omdb
     return await chat.send_photo(photo=film.poster,
                                  caption=get_film_full_desc(film))
+
+
+def check_callback(chat: Chat, cq):
+    if get_mes_id_from_cq(cq) != last_film_msg[chat.id] or not \
+            film_lists[chat.id]:
+        return False
+    return True
 
 
 def get_film_desc(film):
@@ -87,13 +92,20 @@ def get_film_full_desc(film):
         if not hasattr(film, pattern):
             dct.update({pattern: answers.UNKNOWN})
         else:
-            dct.update({pattern: film.__getattr__(pattern)})
+            attr = film.__getattr__(pattern)
+            if not attr:
+                attr = answers.UNKNOWN
+            dct.update({pattern: attr})
     return answers.FULL_DESC.format(
         **dct
     )
 
 
-def get_mes_id(msg):
+def get_mes_id_from_cq(cq):
+    return cq.src['message']['message_id']
+
+
+def get_mes_id_from_resp(msg):
     if msg['ok']:
         return msg['result']['message_id']
     return None
@@ -150,7 +162,7 @@ async def show_film(chat: Chat, index, mes_id=None):
     if not mes_id:
         msg = await chat.send_photo(photo=film.poster,
                                     caption=get_film_desc(film))
-        mes_id = get_mes_id(msg)
+        mes_id = get_mes_id_from_resp(msg)
         await chat.edit_reply_markup(mes_id,
                                      markup=get_inline_films(chat, index))
         last_film_msg[chat.id] = mes_id

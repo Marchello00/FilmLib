@@ -4,12 +4,12 @@ import json
 
 class FilmOMDB:
     def __init__(self, dct=None):
-        self.__dct = {key.lower(): value for key, value in dct.items()}
+        self.dct = {key.lower(): value for key, value in dct.items()}
         self.__dict__.update(dct)
 
     def __getattr__(self, item):
-        if item in self.__dct:
-            return self.__dct[item]
+        if item in self.dct:
+            return self.dct[item]
         raise AttributeError
 
     def __repr__(self):

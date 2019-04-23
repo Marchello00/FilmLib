@@ -56,13 +56,10 @@ class DB:
     def insert_film(self, film):
         session = self.Session()
         if not self.film_in_db(film.imdbid):
-            data = {key: value for key, value in film.__dict__
+            data = {key: str(value) for key, value in film.dct.items()
                     if key in md.Film.__dict__ and
                     not key.startswith('_') and
                     not callable(key)}
-            # ins_film = md.Film(imdbid=film.imdbid, year=film.year,
-            #                    poster=film.poster, title=film.title,
-            #                    type=film.type)
             ins_film = md.Film(**data)
             session.add(ins_film)
             session.commit()
