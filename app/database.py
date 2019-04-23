@@ -30,11 +30,12 @@ class DB:
     def film_in_db(self, film_id):
         session = self.Session()
         ret = bool(
-            session.query(md.Film).filter(md.Film.imdbid == film_id).all())
+            session.query(md.Film).filter(md.Film.imdbid == str(film_id)).all())
         session.close()
         return ret
 
     def film_in_chat_db(self, chat_id, film_id, favourite=None, watched=None):
+        film_id = str(film_id)
         session = self.Session()
         q = session.query(md.Film).join(md.ChatXFilm).filter(
             sa.and_(md.Film.imdbid == film_id,
@@ -72,6 +73,7 @@ class DB:
         session.close()
 
     def add_dependence(self, chat_id, film_id):
+        film_id = str(film_id)
         session = self.Session()
         dep = md.ChatXFilm(chat_id=chat_id, film_id=film_id)
         session.add(dep)
@@ -79,6 +81,7 @@ class DB:
         session.close()
 
     def del_dependence(self, chat_id, film_id):
+        film_id = str(film_id)
         session = self.Session()
         dep = session.query(md.ChatXFilm).filter(
             sa.and_(md.ChatXFilm.film_id == film_id,
@@ -93,6 +96,7 @@ class DB:
         q = session.query(md.Film).join(md.ChatXFilm).filter(
             md.Film.title == title)
         if year:
+            year = int(year)
             q = q.filter(md.Film.year == year)
         if chat_id:
             q = q.filter(md.ChatXFilm.chat_id == chat_id)
@@ -101,6 +105,7 @@ class DB:
         return ret
 
     def set_favourite(self, chat_id, film_id, favourite):
+        film_id = str(film_id)
         session = self.Session()
         film = session.query(md.ChatXFilm).filter(
             sa.and_(md.ChatXFilm.chat_id == chat_id,
@@ -111,6 +116,7 @@ class DB:
         session.close()
 
     def set_watched(self, chat_id, film_id, watched):
+        film_id = str(film_id)
         session = self.Session()
         film = session.query(md.ChatXFilm).filter(
             sa.and_(md.ChatXFilm.chat_id == chat_id,
