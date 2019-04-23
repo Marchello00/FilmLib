@@ -96,7 +96,7 @@ class DB:
         q = session.query(md.Film).join(md.ChatXFilm).filter(
             md.Film.title == title)
         if year:
-            year = int(year)
+            year = str(year)
             q = q.filter(md.Film.year == year)
         if chat_id:
             q = q.filter(md.ChatXFilm.chat_id == chat_id)

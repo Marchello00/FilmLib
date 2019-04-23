@@ -8,7 +8,7 @@ class Film(Base):
     __tablename__ = 'film'
 
     imdbid = sa.Column(sa.String, primary_key=True)
-    year = sa.Column(sa.Integer)
+    year = sa.Column(sa.String)
     poster = sa.Column(sa.String)
     title = sa.Column(sa.String)
     type = sa.Column(sa.String)
