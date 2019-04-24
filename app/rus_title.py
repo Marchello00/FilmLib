@@ -87,6 +87,8 @@ class FilmRus:
             return
         self.omdb = omdb.get_film(name=self.title, year=self.year,
                                   tp=self.type_omdb)
+        if self.omdb.response == 'False':
+            self.omdb = omdb.get_film(name=self.title)
         if not hasattr(self.omdb, 'poster'):
             self.omdb.poster = self.poster
 
