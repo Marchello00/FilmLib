@@ -194,6 +194,12 @@ async def help(chat: Chat, match):
     return await chat.send_text(strings.HELP)
 
 
+@bot.default
+async def default_search(chat: Chat, message):
+    title = message['text']
+    return await search_internet(chat, title=title)
+
+
 def set_favourite(chat: Chat, cq, index, favourite):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
@@ -250,15 +256,22 @@ async def search_internet(chat: Chat, title, tp='movie'):
         film.set_omdb()
     films = [film for film in films if film.omdb.response == 'True']
     if not films:
-        return await chat.send_text(text=strings.FILM_NOT_FOUND)
+        if tp == 'movie':
+            return await chat.send_text(text=strings.FILM_NOT_FOUND)
+        else:
+            return await chat.send_text(text=strings.SERIES_NOT_FOUND)
     global film_lists, buttons_list
     film_lists[chat.id] = films
     for i in range(len(films)):
         inlib = db.film_in_chat_db(chat_id=chat.id,
                                    film_id=films[i].omdb.imdbid)
         film_lists[chat.id][i].inlib = inlib
+        film_lists[chat.id][i].favourite = False
+        film_lists[chat.id][i].watched = False
     b = Buttons()
     b.add_info()
+    b.add_favourites()
+    b.add_watched()
     b.add_lib()
     buttons_list[chat.id] = b
     return await show_film(chat, 0)
