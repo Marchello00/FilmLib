@@ -99,22 +99,6 @@ class DB:
             session.commit()
         session.close()
 
-    # Dangerous to use, because of inlib Film param
-    def get_films_by_title(self, title, year=None, chat_id=None):
-        session = self.Session()
-        # join is bad
-        q = session.query(md.Film).join(md.ChatXFilm).filter(
-            md.Film.title == title)
-        if year:
-            year = str(year)
-            q = q.filter(md.Film.year == year)
-        if chat_id:
-            q = q.filter(md.ChatXFilm.chat_id == chat_id)
-        # Strange things about inlib
-        ret = self.__film_from_query(q)
-        session.close()
-        return ret
-
     def set_favourite(self, chat_id, film_id, favourite):
         film_id = str(film_id)
         session = self.Session()

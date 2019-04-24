@@ -146,6 +146,54 @@ async def get_my_films(chat: Chat, match):
     return await show_film(chat, 0)
 
 
+@bot.command(r'/favourites')
+async def get_my_films(chat: Chat, match):
+    films = db.get_films_by_chat(chat_id=chat.id, favourite=True)
+    if not films:
+        return await chat.send_text(text=strings.NO_FAVOURITES)
+    global film_lists, buttons_list
+    film_lists[chat.id] = films
+    b = Buttons()
+    b.add_info()
+    b.add_favourites()
+    b.add_watched()
+    b.add_lib()
+    buttons_list[chat.id] = b
+    return await show_film(chat, 0)
+
+
+@bot.command(r'/unwatched')
+async def get_my_films(chat: Chat, match):
+    films = db.get_films_by_chat(chat_id=chat.id, watched=False)
+    if not films:
+        return await chat.send_text(text=strings.NO_UNWATCHED)
+    global film_lists, buttons_list
+    film_lists[chat.id] = films
+    b = Buttons()
+    b.add_info()
+    b.add_favourites()
+    b.add_watched()
+    b.add_lib()
+    buttons_list[chat.id] = b
+    return await show_film(chat, 0)
+
+
+@bot.command(r'/stop')
+async def stop(chat: Chat, match):
+    return await chat.send_text(strings.GOODBYE)
+
+
+@bot.command(r'/start')
+async def start(chat: Chat, match):
+    return await chat.send_text(
+        '{hello}\n{help}'.format(hello=strings.HELLO, help=strings.HELP))
+
+
+@bot.command(r'/help')
+async def help(chat: Chat, match):
+    return await chat.send_text(strings.HELP)
+
+
 def set_favourite(chat: Chat, cq, index, favourite):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
@@ -160,8 +208,6 @@ def set_favourite(chat: Chat, cq, index, favourite):
             return cq.answer(text=strings.FILM_ALREADY_IN_FAVOURITES)
         else:
             return cq.answer(text=strings.FILM_ALREADY_NOT_IN_FAVOURITES)
-    # if not db.film_in_chat_db(chat.id, film.imdbid):
-    #     db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
     db.set_favourite(chat_id=chat.id, film_id=film.imdbid,
                      favourite=favourite)
     film_lists[chat.id][index].favourite = favourite
@@ -185,8 +231,6 @@ def set_watched(chat: Chat, cq, index, watched):
             return cq.answer(text=strings.FILM_ALREADY_WATCHED)
         else:
             return cq.answer(text=strings.FILM_ALREADY_NOT_WATCHED)
-    # if not db.film_in_chat_db(chat.id, film.imdbid):
-    #     db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
     db.set_watched(chat_id=chat.id, film_id=film.imdbid, watched=watched)
     film_lists[chat.id][index].watched = watched
     if watched:
