@@ -86,7 +86,7 @@ class Buttons:
         markup = []
         for bttn in self.__bttns:
             if bttn == strings.WATCHED_CQ:
-                add_watched_button(markup, index=index, watched=False)
+                add_watched_button(markup, index=index, watched=True)
             elif bttn == strings.ADDTOLIBRARY_CQ:
                 add_lib_button(markup, index, True)
             elif bttn == strings.ADDTOFAVOURITE_CQ:

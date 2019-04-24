@@ -39,11 +39,13 @@ def add_to_myfilmdb(chat: Chat, cq, match):
         return cq.answer(text=strings.OLD_MSG)
     index = int(match.group(1))
     film = film_lists[chat.id][index]
+    if hasattr(film, 'omdb'):
+        film = film.omdb
     if not db.film_in_db(chat.id):
-        db.insert_film(film.omdb)
-    if db.film_in_chat_db(chat.id, film.omdb.imdbid):
+        db.insert_film(film)
+    if db.film_in_chat_db(chat.id, film.imdbid):
         return cq.answer(text=strings.FILM_ALREADY_IN_DB)
-    db.add_dependence(chat_id=chat.id, film_id=film.omdb.imdbid)
+    db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
     return cq.answer(text=strings.FILM_ADDED_TO_DB)
 
 
@@ -70,10 +72,9 @@ async def show_more(chat: Chat, cq, match):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
     index = int(match.group(1))
-    if hasattr(film_lists[chat.id][index], 'omdb'):
-        film = film_lists[chat.id][index].omdb
-    else:
-        film = film_lists[chat.id][index]
+    film = film_lists[chat.id][index]
+    if hasattr(film, 'omdb'):
+        film = film.omdb
     await chat.send_photo(photo=film.poster,
                           caption=get_film_full_desc(film))
     return cq.answer()
@@ -122,16 +123,18 @@ def set_favourite(chat: Chat, cq, index, favourite):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
     film = film_lists[chat.id][index]
-    if not db.film_in_db(film.omdb.imdbid):
-        db.insert_film(film.omdb)
-    if db.film_in_chat_db(chat.id, film.omdb.imdbid, favourite=favourite):
+    if hasattr(film, 'omdb'):
+        film = film.omdb
+    if not db.film_in_db(film.imdbid):
+        db.insert_film(film)
+    if db.film_in_chat_db(chat.id, film.imdbid, favourite=favourite):
         if favourite:
             return cq.answer(text=strings.FILM_ALREADY_IN_FAVOURITES)
         else:
             return cq.answer(text=strings.FILM_ALREADY_NOT_IN_FAVOURITES)
-    if not db.film_in_chat_db(chat.id, film.omdb.imdbid):
-        db.add_dependence(chat_id=chat.id, film_id=film.omdb.imdbid)
-    db.set_favourite(chat_id=chat.id, film_id=film.omdb.imdbid,
+    if not db.film_in_chat_db(chat.id, film.imdbid):
+        db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
+    db.set_favourite(chat_id=chat.id, film_id=film.imdbid,
                      favourite=favourite)
     if favourite:
         return cq.answer(text=strings.FILM_ADDED_TO_FAVOURITES)
@@ -143,16 +146,18 @@ def set_watched(chat: Chat, cq, index, watched):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
     film = film_lists[chat.id][index]
-    if not db.film_in_db(film.omdb.imdbid):
-        db.insert_film(film.omdb)
-    if db.film_in_chat_db(chat.id, film.omdb.imdbid, watched=watched):
+    if hasattr(film, 'omdb'):
+        film = film.omdb
+    if not db.film_in_db(film.imdbid):
+        db.insert_film(film)
+    if db.film_in_chat_db(chat.id, film.imdbid, watched=watched):
         if watched:
             return cq.answer(text=strings.FILM_ALREADY_WATCHED)
         else:
             return cq.answer(text=strings.FILM_ALREADY_NOT_WATCHED)
-    if not db.film_in_chat_db(chat.id, film.omdb.imdbid):
-        db.add_dependence(chat_id=chat.id, film_id=film.omdb.imdbid)
-    db.set_watched(chat_id=chat.id, film_id=film.omdb.imdbid, watched=watched)
+    if not db.film_in_chat_db(chat.id, film.imdbid):
+        db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
+    db.set_watched(chat_id=chat.id, film_id=film.imdbid, watched=watched)
     if watched:
         return cq.answer(text=strings.FILM_ADDED_TO_WATCHED)
     else:

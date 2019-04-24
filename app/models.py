@@ -30,13 +30,15 @@ class Film(Base):
     boxoffice = sa.Column(sa.String)
     production = sa.Column(sa.String)
     website = sa.Column(sa.String)
+    created_tm = sa.Column(sa.DateTime, server_default=sa.sql.func.now())
+    updated_tm = sa.Column(sa.DateTime, onupdate=sa.sql.func.now())
 
     def __repr__(self):
         return '<Film({id}, {title}, {year}, {tp})>'.format(
-            id=self.id,
+            id=self.imdbid,
             title=self.title,
             year=self.year,
-            tp=self.tp
+            tp=self.type
         )
 
 
