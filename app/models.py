@@ -52,8 +52,9 @@ class ChatXFilm(Base):
     favourite = sa.Column(sa.Boolean, default=False)
 
     def __repr__(self):
-        return '<ChatXFilm({chat_id}, {film_id}, favourite:{fav})>'.format(
+        return '<ChatXFilm({chat_id}, {film_id}, f:{f}, w:{w})>'.format(
             chat_id=self.chat_id,
             film_id=self.film_id,
-            fav=self.favourite
-            )
+            f=self.favourite,
+            w=self.watched
+        )

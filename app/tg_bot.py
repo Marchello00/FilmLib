@@ -34,7 +34,7 @@ async def search_series(chat: Chat, match):
 
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.ADDTOLIBRARY_CQ_RE))
-def add_to_myfilmdb(chat: Chat, cq, match):
+async def add_to_lib(chat: Chat, cq, match):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
     index = int(match.group(1))
@@ -46,7 +46,29 @@ def add_to_myfilmdb(chat: Chat, cq, match):
     if db.film_in_chat_db(chat.id, film.imdbid):
         return cq.answer(text=strings.FILM_ALREADY_IN_DB)
     db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
+    film_lists[chat.id][index].inlib = True
+    await show_film(chat, index, get_mes_id_from_cq(cq))
     return cq.answer(text=strings.FILM_ADDED_TO_DB)
+
+
+@bot.callback(r'{cq}(\d+)'.format(cq=strings.REMOVEFROMLIBRARY_CQ))
+async def remove_from_lib(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=strings.OLD_MSG)
+    index = int(match.group(1))
+    film = film_lists[chat.id][index]
+    if hasattr(film, 'omdb'):
+        film = film.omdb
+    if not db.film_in_db(chat.id):
+        db.insert_film(film)
+    if not db.film_in_chat_db(chat.id, film.imdbid):
+        return cq.answer(text=strings.FILM_ALREADY_NOT_IN_DB)
+    db.del_dependence(chat_id=chat.id, film_id=film.imdbid)
+    film_lists[chat.id][index].inlib = False
+    film_lists[chat.id][index].favourite = False
+    film_lists[chat.id][index].watched = False
+    await show_film(chat, index, get_mes_id_from_cq(cq))
+    return cq.answer(text=strings.FILM_REMOVED_FROM_DB)
 
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.PREV_CQ))
@@ -83,25 +105,29 @@ async def show_more(chat: Chat, cq, match):
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.ADDTOFAVOURITE_CQ))
 async def add_to_favourites(chat: Chat, cq, match):
     index = int(match.group(1))
-    return set_favourite(chat, cq, index, True)
+    set_favourite(chat, cq, index, True)
+    return await show_film(chat, index, get_mes_id_from_cq(cq))
 
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.REMOVEFROMFAVOURITE_CQ))
 async def remove_from_favourites(chat: Chat, cq, match):
     index = int(match.group(1))
-    return set_favourite(chat, cq, index, False)
+    set_favourite(chat, cq, index, False)
+    return await show_film(chat, index, get_mes_id_from_cq(cq))
 
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.WATCHED_CQ))
 async def add_to_watched(chat: Chat, cq, match):
     index = int(match.group(1))
-    return set_watched(chat, cq, index, True)
+    set_watched(chat, cq, index, True)
+    return await show_film(chat, index, get_mes_id_from_cq(cq))
 
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.REMOVEFROMWATCHED_CQ))
 async def remove_from_watched(chat: Chat, cq, match):
     index = int(match.group(1))
-    return set_watched(chat, cq, index, False)
+    set_watched(chat, cq, index, False)
+    return await show_film(chat, index, get_mes_id_from_cq(cq))
 
 
 @bot.command(r'/myfilms')
@@ -115,6 +141,7 @@ async def get_my_films(chat: Chat, match):
     b.add_info()
     b.add_favourites()
     b.add_watched()
+    b.add_lib()
     buttons_list[chat.id] = b
     return await show_film(chat, 0)
 
@@ -122,6 +149,7 @@ async def get_my_films(chat: Chat, match):
 def set_favourite(chat: Chat, cq, index, favourite):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
+    global film_lists
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
         film = film.omdb
@@ -132,10 +160,11 @@ def set_favourite(chat: Chat, cq, index, favourite):
             return cq.answer(text=strings.FILM_ALREADY_IN_FAVOURITES)
         else:
             return cq.answer(text=strings.FILM_ALREADY_NOT_IN_FAVOURITES)
-    if not db.film_in_chat_db(chat.id, film.imdbid):
-        db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
+    # if not db.film_in_chat_db(chat.id, film.imdbid):
+    #     db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
     db.set_favourite(chat_id=chat.id, film_id=film.imdbid,
                      favourite=favourite)
+    film_lists[chat.id][index].favourite = favourite
     if favourite:
         return cq.answer(text=strings.FILM_ADDED_TO_FAVOURITES)
     else:
@@ -145,6 +174,7 @@ def set_favourite(chat: Chat, cq, index, favourite):
 def set_watched(chat: Chat, cq, index, watched):
     if not check_callback(chat, cq):
         return cq.answer(text=strings.OLD_MSG)
+    global film_lists
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
         film = film.omdb
@@ -155,9 +185,10 @@ def set_watched(chat: Chat, cq, index, watched):
             return cq.answer(text=strings.FILM_ALREADY_WATCHED)
         else:
             return cq.answer(text=strings.FILM_ALREADY_NOT_WATCHED)
-    if not db.film_in_chat_db(chat.id, film.imdbid):
-        db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
+    # if not db.film_in_chat_db(chat.id, film.imdbid):
+    #     db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
     db.set_watched(chat_id=chat.id, film_id=film.imdbid, watched=watched)
+    film_lists[chat.id][index].watched = watched
     if watched:
         return cq.answer(text=strings.FILM_ADDED_TO_WATCHED)
     else:
@@ -178,6 +209,10 @@ async def search_internet(chat: Chat, title, tp='movie'):
         return await chat.send_text(text=strings.FILM_NOT_FOUND)
     global film_lists, buttons_list
     film_lists[chat.id] = films
+    for i in range(len(films)):
+        inlib = db.film_in_chat_db(chat_id=chat.id,
+                                   film_id=films[i].omdb.imdbid)
+        film_lists[chat.id][i].inlib = inlib
     b = Buttons()
     b.add_info()
     b.add_lib()
@@ -238,7 +273,8 @@ async def show_film(chat: Chat, index, mes_id=None):
     films = film_lists[chat.id]
     film = films[index]
     markup = buttons_list[chat.id].get(index=index,
-                                       max_len=len(film_lists[chat.id]))
+                                       max_len=len(films),
+                                       film=film)
     if not mes_id:
         msg = await chat.send_photo(photo=film.poster,
                                     caption=get_film_desc(film),

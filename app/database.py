@@ -14,9 +14,9 @@ class DB:
     }
     Session = None
 
-    def __film_from_query(self, q):
+    def __film_from_query(self, q, inlib=False):
         films = []
-        for film, favourite, watched in q:
+        for film, watched, favourite in q:
             films.append(FilmOMDB({
                 key: value for key, value in
                 film.__dict__.items() if
@@ -24,6 +24,7 @@ class DB:
             }))
             films[-1].favourite = favourite
             films[-1].watched = watched
+            films[-1].inlib = inlib
         return films
 
     def __init__(self, engine):
@@ -44,9 +45,9 @@ class DB:
         q = session.query(md.ChatXFilm).filter(
             sa.and_(md.ChatXFilm.film_id == film_id,
                     md.ChatXFilm.chat_id == chat_id))
-        if favourite:
+        if favourite is not None:
             q = q.filter(md.ChatXFilm.favourite == favourite)
-        if watched:
+        if watched is not None:
             q = q.filter(md.ChatXFilm.watched == watched)
         ret = bool(q.all())
         session.close()
@@ -63,7 +64,7 @@ class DB:
         if watched is not None:
             q = q.filter(md.ChatXFilm.watched == watched)
         q.order_by(md.Film.updated_tm)
-        ret = self.__film_from_query(q)
+        ret = self.__film_from_query(q, inlib=True)
         session.close()
         return ret
 
@@ -98,8 +99,10 @@ class DB:
             session.commit()
         session.close()
 
+    # Dangerous to use, because of inlib Film param
     def get_films_by_title(self, title, year=None, chat_id=None):
         session = self.Session()
+        # join is bad
         q = session.query(md.Film).join(md.ChatXFilm).filter(
             md.Film.title == title)
         if year:
@@ -107,6 +110,7 @@ class DB:
             q = q.filter(md.Film.year == year)
         if chat_id:
             q = q.filter(md.ChatXFilm.chat_id == chat_id)
+        # Strange things about inlib
         ret = self.__film_from_query(q)
         session.close()
         return ret
@@ -123,6 +127,7 @@ class DB:
         session.close()
 
     def set_watched(self, chat_id, film_id, watched):
+        print('Watched switched to {w}'.format(w=watched))
         film_id = str(film_id)
         session = self.Session()
         film = session.query(md.ChatXFilm).filter(

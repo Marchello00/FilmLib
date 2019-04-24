@@ -1,5 +1,4 @@
 from app import strings
-from app import db
 
 
 def add_showinfo_button(premarkup, index=None):
@@ -14,50 +13,56 @@ def add_showinfo_button(premarkup, index=None):
     ])
 
 
-def add_favourite_button(premarkup, index=None, favourite=True):
+def add_favourite_button(premarkup, index=None, favourite=False):
     if index is None:
         index = '{index}'
-    if favourite:
+    if not favourite:
         txt = strings.ADD_TO_FAVOURITE_BUTTON
+        cq = strings.ADDTOFAVOURITE_CQ
     else:
         txt = strings.REMOVE_FROM_FAVOURITE_BUTTON
+        cq = strings.REMOVEFROMFAVOURITE_CQ
     premarkup.append([
         {
             'text': txt,
             'callback_data': '{cq}{index}'.format(index=index,
-                                                  cq=strings.ADDTOFAVOURITE_CQ)
+                                                  cq=cq)
         }
     ])
 
 
-def add_lib_button(premarkup, index=None, lib=True):
+def add_lib_button(premarkup, index=None, lib=False):
     if index is None:
         index = '{index}'
-    if lib:
+    if not lib:
         txt = strings.ADD_TO_FILMLIB_BUTTON
+        cq = strings.ADDTOLIBRARY_CQ
     else:
         txt = strings.REMOVE_FROM_FILMLIB_BUTTON
+        cq = strings.REMOVEFROMLIBRARY_CQ
     premarkup.append([
         {
             'text': txt,
             'callback_data': '{cq}{index}'.format(index=index,
-                                                  cq=strings.ADDTOLIBRARY_CQ)
+                                                  cq=cq)
         }
     ])
 
 
-def add_watched_button(premarkup, index=None, watched=True):
+def add_watched_button(premarkup, index=None, watched=False):
     if index is None:
         index = '{index}'
-    if watched:
+    if not watched:
         txt = strings.WATCHED_BUTTON
+        cq = strings.WATCHED_CQ
     else:
         txt = strings.UNWATCHED_BUTTON
+        cq = strings.REMOVEFROMWATCHED_CQ
     premarkup.append([
         {
             'text': txt,
             'callback_data': '{cq}{index}'.format(index=index,
-                                                  cq=strings.WATCHED_CQ)
+                                                  cq=cq)
         }
     ])
 
@@ -81,16 +86,16 @@ class Buttons:
     def add_watched(self):
         self.__bttns.append(strings.WATCHED_CQ)
 
-    def get(self, index, max_len):
-        # TODO: add db check for changing buttons
+    def get(self, index, max_len, film):
         markup = []
         for bttn in self.__bttns:
-            if bttn == strings.WATCHED_CQ:
-                add_watched_button(markup, index=index, watched=True)
+            if bttn == strings.WATCHED_CQ and film.inlib:
+                add_watched_button(markup, index=index, watched=film.watched)
             elif bttn == strings.ADDTOLIBRARY_CQ:
-                add_lib_button(markup, index, True)
-            elif bttn == strings.ADDTOFAVOURITE_CQ:
-                add_favourite_button(markup, index=index, favourite=True)
+                add_lib_button(markup, index, film.inlib)
+            elif bttn == strings.ADDTOFAVOURITE_CQ and film.inlib:
+                add_favourite_button(markup, index=index,
+                                     favourite=film.favourite)
             elif bttn == strings.MOREINFO_CQ:
                 add_showinfo_button(markup, index=index)
         page_buttons = []
