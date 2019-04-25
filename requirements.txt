@@ -1,0 +1,7 @@
+aiotg
+requests
+bs4
+sqlalchemy
+psycopg2
+aiopg
+lxml
