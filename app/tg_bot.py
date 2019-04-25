@@ -190,7 +190,7 @@ async def start(chat: Chat, match):
 
 
 @bot.command(r'/help')
-async def help(chat: Chat, match):
+async def helper(chat: Chat, match):
     return await chat.send_text(strings.HELP)
 
 
@@ -250,12 +250,18 @@ def search_media(title, tp=strings.MOVIE_TYPE):
             if film.poster]
 
 
-async def search_internet(chat: Chat, title, tp=strings.MOVIE_TYPE, tp2=None):
+async def search_internet(chat: Chat, title, tp=strings.MOVIE_TYPE, limit=10,
+                          tp2=None):
     films = search_media(title, tp=tp)
     if tp2 is not None:
         films += search_media(title, tp=tp2)
-    for film in films:
+    cnt, i = 0, 0
+    for film, i in zip(films, range(len(films))):
         film.set_omdb()
+        cnt += film.omdb.response == 'True'
+        if cnt == limit:
+            films = films[:i + 1]
+            break
     films = [film for film in films if film.omdb.response == 'True']
     if not films:
         if tp == strings.MOVIE_TYPE:
