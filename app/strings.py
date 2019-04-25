@@ -1,3 +1,5 @@
+NO_PICTURE_URL = 'https://fasttorrent.org/templates/tor-baza-utf/images/no_poster.jpg'
+NONE_OMDB = 'N/A'
 MOVIE_TYPE = 'movie'
 SERIES_TYPE = 'tv'
 NEXT_CQ = '>'

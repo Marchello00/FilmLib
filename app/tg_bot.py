@@ -340,6 +340,9 @@ async def show_film(chat: Chat, index, mes_id=None):
     markup = buttons_list[chat.id].get(index=index,
                                        max_len=len(films),
                                        film=film)
+    if not hasattr(film, 'poster') or not film.poster or \
+        film.poster == strings.NONE_OMDB:
+        film.poster = strings.NO_PICTURE_URL
     if not mes_id:
         msg = await chat.send_photo(photo=film.poster,
                                     caption=get_film_desc(film),

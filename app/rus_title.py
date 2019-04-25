@@ -1,6 +1,7 @@
 import bs4
 import requests
 import re
+from app.strings import NONE_OMDB
 
 
 class Converter:
@@ -87,9 +88,13 @@ class FilmRus:
             return
         self.omdb = omdb.get_film(name=self.title, year=self.year,
                                   tp=self.type_omdb)
-        if self.omdb.response == 'False':
+        if self.omdb.response == 'False' or \
+                not self.title.lower() == self.omdb.title.lower() or \
+                self.omdb.poster == NONE_OMDB:
+            self.title = self.title.replace('(', '')
+            self.title = self.title.replace(')', '')
             self.omdb = omdb.get_film(name=self.title)
-        if not hasattr(self.omdb, 'poster') or self.omdb.poster == 'N/A':
+        if not hasattr(self.omdb, 'poster') or self.omdb.poster == NONE_OMDB:
             self.omdb.poster = self.poster
 
     def get_omdb(self):
