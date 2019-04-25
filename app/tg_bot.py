@@ -255,7 +255,7 @@ async def search_internet(chat: Chat, title, tp=strings.MOVIE_TYPE, limit=10,
     films = search_media(title, tp=tp)
     if tp2 is not None:
         films += search_media(title, tp=tp2)
-    cnt, i = 0, 0
+    cnt = 0
     for film, i in zip(films, range(len(films))):
         film.set_omdb()
         cnt += film.omdb.response == 'True'
