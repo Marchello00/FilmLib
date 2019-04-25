@@ -30,7 +30,7 @@ async def search_films(chat: Chat, match):
 @bot.command(r'/searchseries (.+)')
 async def search_series(chat: Chat, match):
     title = match.group(1)
-    return await search_internet(chat, title=title, tp='tv')
+    return await search_internet(chat, title=title, tp=strings.SERIES_TYPE)
 
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.ADDTOLIBRARY_CQ_RE))
@@ -197,7 +197,7 @@ async def help(chat: Chat, match):
 @bot.default
 async def default_search(chat: Chat, message):
     title = message['text']
-    return await search_internet(chat, title=title)
+    return await search_internet(chat, title=title, tp2=strings.SERIES_TYPE)
 
 
 def set_favourite(chat: Chat, cq, index, favourite):
@@ -245,18 +245,20 @@ def set_watched(chat: Chat, cq, index, watched):
         return cq.answer(text=strings.FILM_REMOVED_FROM_WATCHED)
 
 
-def search_media(title, tp='movie'):
+def search_media(title, tp=strings.MOVIE_TYPE):
     return [film for film in cv.get_russian(title, tp=tp, lang=None)
             if film.poster]
 
 
-async def search_internet(chat: Chat, title, tp='movie'):
+async def search_internet(chat: Chat, title, tp=strings.MOVIE_TYPE, tp2=None):
     films = search_media(title, tp=tp)
+    if tp2 is not None:
+        films += search_media(title, tp=tp2)
     for film in films:
         film.set_omdb()
     films = [film for film in films if film.omdb.response == 'True']
     if not films:
-        if tp == 'movie':
+        if tp == strings.MOVIE_TYPE:
             return await chat.send_text(text=strings.FILM_NOT_FOUND)
         else:
             return await chat.send_text(text=strings.SERIES_NOT_FOUND)

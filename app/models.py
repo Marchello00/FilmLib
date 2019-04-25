@@ -1,5 +1,6 @@
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -30,8 +31,6 @@ class Film(Base):
     boxoffice = sa.Column(sa.String)
     production = sa.Column(sa.String)
     website = sa.Column(sa.String)
-    created_tm = sa.Column(sa.DateTime, server_default=sa.sql.func.now())
-    updated_tm = sa.Column(sa.DateTime, onupdate=sa.sql.func.now())
 
     def __repr__(self):
         return '<Film({id}, {title}, {year}, {tp})>'.format(
@@ -50,6 +49,10 @@ class ChatXFilm(Base):
                         primary_key=True)
     watched = sa.Column(sa.Boolean, default=False)
     favourite = sa.Column(sa.Boolean, default=False)
+    created_tm = sa.Column(sa.TIMESTAMP,
+                           default=datetime.utcnow)
+    updated_tm = sa.Column(sa.TIMESTAMP, default=datetime.utcnow,
+                           onupdate=datetime.utcnow)
 
     def __repr__(self):
         return '<ChatXFilm({chat_id}, {film_id}, f:{f}, w:{w})>'.format(

@@ -14,9 +14,10 @@ class DB:
     }
     Session = None
 
-    def __film_from_query(self, q, inlib=False):
+    @staticmethod
+    def __film_from_query(q, inlib=False):
         films = []
-        for film, watched, favourite in q:
+        for film, watched, favourite, ct in q:
             films.append(FilmOMDB({
                 key: value for key, value in
                 film.__dict__.items() if
@@ -25,6 +26,8 @@ class DB:
             films[-1].favourite = favourite
             films[-1].watched = watched
             films[-1].inlib = inlib
+            films[-1].created_tm = ct
+        films.sort(key=lambda x: x.created_tm, reverse=True)
         return films
 
     def __init__(self, engine):
@@ -56,14 +59,14 @@ class DB:
     def get_films_by_chat(self, chat_id, favourite=None, watched=None):
         session = self.Session()
         q = session.query(md.Film, md.ChatXFilm.watched,
-                          md.ChatXFilm.favourite).filter(
+                          md.ChatXFilm.favourite,
+                          md.ChatXFilm.created_tm).filter(
             sa.and_(md.ChatXFilm.chat_id == chat_id,
                     md.ChatXFilm.film_id == md.Film.imdbid))
         if favourite is not None:
             q = q.filter(md.ChatXFilm.favourite)
         if watched is not None:
             q = q.filter(md.ChatXFilm.watched == watched)
-        q.order_by(md.Film.updated_tm)
         ret = self.__film_from_query(q, inlib=True)
         session.close()
         return ret
