@@ -18,15 +18,16 @@ def add_favourite_button(premarkup, index=None, favourite=False):
         index = '{index}'
     if not favourite:
         txt = strings.ADD_TO_FAVOURITE_BUTTON
-        cq = strings.ADDTOFAVOURITE_CQ
+        callback_query = strings.ADDTOFAVOURITE_CQ
     else:
         txt = strings.REMOVE_FROM_FAVOURITE_BUTTON
-        cq = strings.REMOVEFROMFAVOURITE_CQ
+        callback_query = strings.REMOVEFROMFAVOURITE_CQ
     premarkup.append([
         {
             'text': txt,
-            'callback_data': '{cq}{index}'.format(index=index,
-                                                  cq=cq)
+            'callback_data':
+                '{callback_query}{index}'.format(index=index,
+                                                 callback_query=callback_query)
         }
     ])
 

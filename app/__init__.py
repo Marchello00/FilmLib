@@ -1,8 +1,8 @@
 import aiotg as tg
+import sqlalchemy as sa
 from app import omdb_api
 from app import rus_title
 from app import database
-import sqlalchemy as sa
 
 omdb = omdb_api.OMDB('')
 bot: tg.Bot
@@ -37,4 +37,3 @@ def init(configs: dict):
     init_db(configs['db_url'])
     from app import tg_bot
     from app import models
-    from app import database as db

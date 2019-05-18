@@ -26,6 +26,10 @@ async def search_films(chat: Chat, match):
     title = match.group(1)
     return await search_internet(chat, title=title)
 
+@bot.command(r'/search')
+async def show_search_help(chat: Chat, match):
+    return await chat.send_text(strings.SEARCH_HELP)
+
 
 @bot.command(r'/searchseries (.+)')
 async def search_series(chat: Chat, match):
@@ -104,6 +108,8 @@ async def show_more(chat: Chat, cq, match):
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.ADDTOFAVOURITE_CQ))
 async def add_to_favourites(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=strings.OLD_MSG)
     index = int(match.group(1))
     set_favourite(chat, cq, index, True)
     return await show_film(chat, index, get_mes_id_from_cq(cq))
@@ -111,6 +117,8 @@ async def add_to_favourites(chat: Chat, cq, match):
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.REMOVEFROMFAVOURITE_CQ))
 async def remove_from_favourites(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=strings.OLD_MSG)
     index = int(match.group(1))
     set_favourite(chat, cq, index, False)
     return await show_film(chat, index, get_mes_id_from_cq(cq))
@@ -118,6 +126,8 @@ async def remove_from_favourites(chat: Chat, cq, match):
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.WATCHED_CQ))
 async def add_to_watched(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=strings.OLD_MSG)
     index = int(match.group(1))
     set_watched(chat, cq, index, True)
     return await show_film(chat, index, get_mes_id_from_cq(cq))
@@ -125,6 +135,8 @@ async def add_to_watched(chat: Chat, cq, match):
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.REMOVEFROMWATCHED_CQ))
 async def remove_from_watched(chat: Chat, cq, match):
+    if not check_callback(chat, cq):
+        return cq.answer(text=strings.OLD_MSG)
     index = int(match.group(1))
     set_watched(chat, cq, index, False)
     return await show_film(chat, index, get_mes_id_from_cq(cq))
@@ -147,7 +159,7 @@ async def get_my_films(chat: Chat, match):
 
 
 @bot.command(r'/favourites')
-async def get_my_films(chat: Chat, match):
+async def get_favourite_films(chat: Chat, match):
     films = db.get_films_by_chat(chat_id=chat.id, favourite=True)
     if not films:
         return await chat.send_text(text=strings.NO_FAVOURITES)
@@ -163,7 +175,7 @@ async def get_my_films(chat: Chat, match):
 
 
 @bot.command(r'/unwatched')
-async def get_my_films(chat: Chat, match):
+async def get_unwatched_films(chat: Chat, match):
     films = db.get_films_by_chat(chat_id=chat.id, watched=False)
     if not films:
         return await chat.send_text(text=strings.NO_UNWATCHED)
