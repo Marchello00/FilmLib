@@ -57,7 +57,7 @@ def main():
         if args.config:
             configs = load_config_file(args.config)
         else:
-            configs = load_config_environ()
+            configs = load_config_environ(args.debug)
     except Exception:
         print(strings.FAILED_TO_LOAD_CONFIG)
         return
