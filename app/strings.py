@@ -1,4 +1,17 @@
-NO_PICTURE_URL = 'https://fasttorrent.org/templates/tor-baza-utf/images/no_poster.jpg'
+# Core
+TOKEN_ENVIRON = 'TOKEN'
+TOKEN_ENVIRON_DEBUG = 'TOKEN_DEBUG'
+APIKEY_ENVIRON = 'APIKEY'
+APIKEY_ENVIRON_DEBUG = 'APIKEY_DEBUG'
+DATABASE_URL_ENVIRON = 'DATABASE_URL'
+DATABASE_URL_ENVIRON_DEBUG = 'DATABASE_URL_DEBUG'
+FAILED_TO_LOAD_CONFIG = 'Failed to load config'
+
+TOKEN_CONFIG = 'token'
+APIKEY_CONFIG = 'apikey'
+DATABASE_URL_CONFIG = 'db_url'
+
+# Bot core
 NONE_OMDB = 'N/A'
 MOVIE_TYPE = 'movie'
 SERIES_TYPE = 'tv'
@@ -13,6 +26,8 @@ ADDTOFAVOURITE_CQ = '!'
 WATCHED_CQ = '_'
 REMOVEFROMFAVOURITE_CQ = '&'
 REMOVEFROMWATCHED_CQ = '@'
+
+# Bot messages
 FILM_NOT_FOUND = 'К сожалению, я не нашёл фильмов с таким названием'
 SERIES_NOT_FOUND = 'К сожалению, я не нашёл сериалов с таким названием'
 FILM_ALREADY_IN_DB = 'Фильм уже в вашей фильмотеке'
@@ -78,5 +93,11 @@ HELP = '''
 Приятного пользования и интересных фильмов!
 😜😜😜
 '''
-SEARCH_HELP = 'Если хочешь использовать поиск, введи /search и ' \
-              'название фильма, например: /search Аватар'
+SEARCH_HELP = '''Если хочешь использовать поиск, введи: 
+/search <название фильма>
+Например:
+/search Аватар
+'''
+
+# Other
+NO_PICTURE_URL = 'https://fasttorrent.org/templates/tor-baza-utf/images/no_poster.jpg'

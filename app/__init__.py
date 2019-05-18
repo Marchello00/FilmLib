@@ -3,6 +3,7 @@ import sqlalchemy as sa
 from app import omdb_api
 from app import rus_title
 from app import database
+from app import strings
 
 omdb = omdb_api.OMDB('')
 bot: tg.Bot
@@ -32,8 +33,8 @@ def init_db(db_url):
 
 
 def init(configs: dict):
-    init_omdb(configs['apikey'])
-    init_bot(configs['token'])
-    init_db(configs['db_url'])
+    init_omdb(configs[strings.APIKEY_CONFIG])
+    init_bot(configs[strings.TOKEN_CONFIG])
+    init_db(configs[strings.DATABASE_URL_CONFIG])
     from app import tg_bot
     from app import models

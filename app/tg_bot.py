@@ -26,6 +26,7 @@ async def search_films(chat: Chat, match):
     title = match.group(1)
     return await search_internet(chat, title=title)
 
+
 @bot.command(r'/search')
 async def show_search_help(chat: Chat, match):
     return await chat.send_text(strings.SEARCH_HELP)
@@ -353,7 +354,7 @@ async def show_film(chat: Chat, index, mes_id=None):
                                        max_len=len(films),
                                        film=film)
     if not hasattr(film, 'poster') or not film.poster or \
-        film.poster == strings.NONE_OMDB:
+            film.poster == strings.NONE_OMDB:
         film.poster = strings.NO_PICTURE_URL
     if not mes_id:
         msg = await chat.send_photo(photo=film.poster,

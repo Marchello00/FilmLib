@@ -3,6 +3,7 @@ import argparse
 import json
 import asyncio
 import os
+import app.strings as strings
 
 
 def parse_args():
@@ -22,12 +23,24 @@ def load_config_file(config_path):
         return s
 
 
-def load_config_environ():
-    return {
-        'token': os.environ.get('TOKEN'),
-        'apikey': os.environ.get('APIKEY'),
-        'db_url': os.environ.get('DATABASE_URL')
+def load_config_environ(debug=False):
+    config = {
+        strings.TOKEN_CONFIG: os.environ.get(strings.TOKEN_ENVIRON),
+        strings.APIKEY_CONFIG: os.environ.get(strings.APIKEY_ENVIRON),
+        strings.DATABASE_URL_CONFIG: os.environ.get(
+            strings.DATABASE_URL_ENVIRON)
     }
+    if debug:
+        if os.environ.get(strings.TOKEN_ENVIRON_DEBUG):
+            config[strings.TOKEN_CONFIG] = os.environ.get(
+                strings.TOKEN_ENVIRON_DEBUG)
+        if os.environ.get(strings.APIKEY_ENVIRON_DEBUG):
+            config[strings.APIKEY_CONFIG] = os.environ.get(
+                strings.APIKEY_ENVIRON_DEBUG)
+        if os.environ.get(strings.DATABASE_URL_ENVIRON_DEBUG):
+            config[strings.DATABASE_URL_CONFIG] = os.environ.get(
+                strings.DATABASE_URL_ENVIRON_DEBUG)
+    return config
 
 
 async def start():
@@ -46,7 +59,7 @@ def main():
         else:
             configs = load_config_environ()
     except Exception:
-        print('Failed to load config')
+        print(strings.FAILED_TO_LOAD_CONFIG)
         return
     app.init(configs)
     if args.debug:
