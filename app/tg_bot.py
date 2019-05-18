@@ -18,7 +18,7 @@ async def echo(chat: Chat, match):
 
 @bot.command(r'/ping')
 async def ping(chat: Chat, match):
-    return await chat.send_text('Pong!')
+    return await chat.send_text(strings.PONG)
 
 
 @bot.command(r'/search (.+)')
@@ -27,15 +27,15 @@ async def search_films(chat: Chat, match):
     return await search_internet(chat, title=title)
 
 
-@bot.command(r'/search')
-async def show_search_help(chat: Chat, match):
-    return await chat.send_text(strings.SEARCH_HELP)
-
-
 @bot.command(r'/searchseries (.+)')
 async def search_series(chat: Chat, match):
     title = match.group(1)
     return await search_internet(chat, title=title, tp=strings.SERIES_TYPE)
+
+
+@bot.command(r'/search')
+async def show_search_help(chat: Chat, match):
+    return await chat.send_text(strings.SEARCH_HELP)
 
 
 @bot.callback(r'{cq}(\d+)'.format(cq=strings.ADDTOLIBRARY_CQ_RE))

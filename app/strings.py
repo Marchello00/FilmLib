@@ -98,6 +98,7 @@ SEARCH_HELP = '''Если хочешь использовать поиск, вв
 Например:
 /search Аватар
 '''
+PONG = 'Pong!'
 
 # Other
 NO_PICTURE_URL = 'https://fasttorrent.org/templates/tor-baza-utf/images/no_poster.jpg'
