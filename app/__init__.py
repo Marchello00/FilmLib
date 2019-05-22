@@ -1,5 +1,6 @@
 import aiotg as tg
 import sqlalchemy as sql
+from app.debug import DEBUG
 from app import omdb_api
 from app import rus_title
 from app import database
@@ -9,7 +10,6 @@ omdb = omdb_api.OMDB('')
 bot: tg.Bot
 converter = rus_title.Converter()
 db: database.DB
-DEBUG = False
 
 
 sessions = {}
