@@ -39,6 +39,5 @@ def init(configs: dict, debug=False):
     init_omdb(configs[strings.APIKEY_CONFIG])
     init_bot(configs[strings.TOKEN_CONFIG])
     init_db(configs[strings.DATABASE_URL_CONFIG])
-    if not DEBUG:
-        from app import tg_bot
-        from app import models
+    from app import models
+    from app import tg_bot
