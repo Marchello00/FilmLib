@@ -1,5 +1,5 @@
-import requests
 import json
+import requests
 
 
 class FilmOMDB:
@@ -39,33 +39,33 @@ class OMDB:
     def __init__(self, key):
         self.__apikey = key
 
-    def get_film(self, name, year=None, tp=None):
+    def get_film(self, name, year=None, m_type=None):
         """
         Search film by concrete correct title
         (optional year, type)
         :param name: Film title
         :param year: Film year
-        :param tp: Type: movie, series, episode
+        :param m_type: Type: movie, series, episode
         :return: Information about the film found (FilmOMDB)
         """
-        url = self.__get_url(title=name, year=year, type=tp)
-        r = requests.get(url)
+        url = self.__get_url(title=name, year=year, type=m_type)
+        request = requests.get(url)
         try:
-            return FilmOMDB(json.loads(r.text))
+            return FilmOMDB(json.loads(request.text))
         except Exception:
             return FilmOMDB({'response': 'False'})
 
-    def search_film(self, search, year=None, tp=None):
+    def search_film(self, search, year=None, m_type=None):
         """
         Search films/series/episodes by keywords
         :param search: Keywords
         :param year: Film year
-        :param tp: Type: movie, series, episode
+        :param m_type: Type: movie, series, episode
         :return: Information about the films found (FilmOMDB)
         """
-        url = self.__get_url(search=search, year=year, type=tp)
-        r = requests.get(url)
-        return [FilmOMDB(film) for film in json.loads(r.text)['Search']]
+        url = self.__get_url(search=search, year=year, type=m_type)
+        request = requests.get(url)
+        return [FilmOMDB(film) for film in json.loads(request.text)['Search']]
 
     def get_by_id(self, film_id):
         """
@@ -74,8 +74,8 @@ class OMDB:
         :return: Information about the film found (FilmOMDB)
         """
         url = self.__get_url(id=film_id)
-        r = requests.get(url)
-        return FilmOMDB(json.loads(r.text))
+        request = requests.get(url)
+        return FilmOMDB(json.loads(request.text))
 
     def __get_url(self, **kwargs):
         url = self.__site

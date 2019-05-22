@@ -1,7 +1,7 @@
-from app import sessions
-
 import time
 from threading import Thread
+
+from app import sessions
 
 
 class Cleaner(Thread):

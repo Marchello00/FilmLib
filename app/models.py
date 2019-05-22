@@ -1,6 +1,6 @@
-import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+import sqlalchemy as sql
+from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
@@ -8,29 +8,29 @@ Base = declarative_base()
 class Film(Base):
     __tablename__ = 'film'
 
-    imdbid = sa.Column(sa.String, primary_key=True)
-    year = sa.Column(sa.String)
-    poster = sa.Column(sa.String)
-    title = sa.Column(sa.String)
-    type = sa.Column(sa.String)
-    rated = sa.Column(sa.String)
-    released = sa.Column(sa.String)
-    runtime = sa.Column(sa.String)
-    genre = sa.Column(sa.String)
-    director = sa.Column(sa.String)
-    writer = sa.Column(sa.String)
-    actors = sa.Column(sa.String)
-    plot = sa.Column(sa.String)
-    country = sa.Column(sa.String)
-    awards = sa.Column(sa.String)
-    ratings = sa.Column(sa.String)
-    metascore = sa.Column(sa.String)
-    imdbrating = sa.Column(sa.String)
-    imdbvotes = sa.Column(sa.String)
-    dvd = sa.Column(sa.String)
-    boxoffice = sa.Column(sa.String)
-    production = sa.Column(sa.String)
-    website = sa.Column(sa.String)
+    imdbid = sql.Column(sql.String, primary_key=True)
+    year = sql.Column(sql.String)
+    poster = sql.Column(sql.String)
+    title = sql.Column(sql.String)
+    type = sql.Column(sql.String)
+    rated = sql.Column(sql.String)
+    released = sql.Column(sql.String)
+    runtime = sql.Column(sql.String)
+    genre = sql.Column(sql.String)
+    director = sql.Column(sql.String)
+    writer = sql.Column(sql.String)
+    actors = sql.Column(sql.String)
+    plot = sql.Column(sql.String)
+    country = sql.Column(sql.String)
+    awards = sql.Column(sql.String)
+    ratings = sql.Column(sql.String)
+    metascore = sql.Column(sql.String)
+    imdbrating = sql.Column(sql.String)
+    imdbvotes = sql.Column(sql.String)
+    dvd = sql.Column(sql.String)
+    boxoffice = sql.Column(sql.String)
+    production = sql.Column(sql.String)
+    website = sql.Column(sql.String)
 
     def __repr__(self):
         return '<Film({id}, {title}, {year}, {tp})>'.format(
@@ -44,15 +44,15 @@ class Film(Base):
 class ChatXFilm(Base):
     __tablename__ = 'chat_x_film'
 
-    chat_id = sa.Column(sa.Integer, primary_key=True)
-    film_id = sa.Column(sa.String, sa.ForeignKey('film.imdbid'),
-                        primary_key=True)
-    watched = sa.Column(sa.Boolean, default=False)
-    favourite = sa.Column(sa.Boolean, default=False)
-    created_tm = sa.Column(sa.TIMESTAMP,
-                           default=datetime.utcnow)
-    updated_tm = sa.Column(sa.TIMESTAMP, default=datetime.utcnow,
-                           onupdate=datetime.utcnow)
+    chat_id = sql.Column(sql.Integer, primary_key=True)
+    film_id = sql.Column(sql.String, sql.ForeignKey('film.imdbid'),
+                         primary_key=True)
+    watched = sql.Column(sql.Boolean, default=False)
+    favourite = sql.Column(sql.Boolean, default=False)
+    created_tm = sql.Column(sql.TIMESTAMP,
+                            default=datetime.utcnow)
+    updated_tm = sql.Column(sql.TIMESTAMP, default=datetime.utcnow,
+                            onupdate=datetime.utcnow)
 
     def __repr__(self):
         return '<ChatXFilm({chat_id}, {film_id}, f:{f}, w:{w})>'.format(

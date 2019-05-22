@@ -7,8 +7,10 @@ def add_showinfo_button(premarkup, index=None):
     premarkup.append([
         {
             'text': strings.MORE_INFO_BUTTON,
-            'callback_data': '{cq}{index}'.format(index=index,
-                                                  cq=strings.MOREINFO_CQ)
+            'callback_data':
+                '{callback_query}'
+                '{index}'.format(index=index,
+                                 callback_query=strings.MOREINFO_CQ)
         }
     ])
 
@@ -37,15 +39,17 @@ def add_lib_button(premarkup, index=None, lib=False):
         index = '{index}'
     if not lib:
         txt = strings.ADD_TO_FILMLIB_BUTTON
-        cq = strings.ADDTOLIBRARY_CQ
+        callback_query = strings.ADDTOLIBRARY_CQ
     else:
         txt = strings.REMOVE_FROM_FILMLIB_BUTTON
-        cq = strings.REMOVEFROMLIBRARY_CQ
+        callback_query = strings.REMOVEFROMLIBRARY_CQ
     premarkup.append([
         {
             'text': txt,
-            'callback_data': '{cq}{index}'.format(index=index,
-                                                  cq=cq)
+            'callback_data':
+                '{callback_query}'
+                '{index}'.format(index=index,
+                                 callback_query=callback_query)
         }
     ])
 
@@ -55,15 +59,17 @@ def add_watched_button(premarkup, index=None, watched=False):
         index = '{index}'
     if not watched:
         txt = strings.WATCHED_BUTTON
-        cq = strings.WATCHED_CQ
+        callback_query = strings.WATCHED_CQ
     else:
         txt = strings.UNWATCHED_BUTTON
-        cq = strings.REMOVEFROMWATCHED_CQ
+        callback_query = strings.REMOVEFROMWATCHED_CQ
     premarkup.append([
         {
             'text': txt,
-            'callback_data': '{cq}{index}'.format(index=index,
-                                                  cq=cq)
+            'callback_data':
+                '{callback_query}'
+                '{index}'.format(index=index,
+                                 callback_query=callback_query)
         }
     ])
 
@@ -103,14 +109,18 @@ class Buttons:
         if index > 0:
             page_buttons.append({
                 'text': strings.PREV_FILM_BUTTON,
-                'callback_data': '{cq}{index}'.format(index=index,
-                                                      cq=strings.PREV_CQ)
+                'callback_data':
+                    '{callback_query}'
+                    '{index}'.format(index=index,
+                                     callback_query=strings.PREV_CQ)
             })
         if index < max_len - 1:
             page_buttons.append({
                 'text': strings.NEXT_FILM_BUTTON,
-                'callback_data': '{cq}{index}'.format(index=index,
-                                                      cq=strings.NEXT_CQ)
+                'callback_data':
+                    '{callback_query}'
+                    '{index}'.format(index=index,
+                                     callback_query=strings.NEXT_CQ)
             })
         if page_buttons:
             markup.append(page_buttons)

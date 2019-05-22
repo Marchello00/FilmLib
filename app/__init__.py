@@ -1,5 +1,5 @@
 import aiotg as tg
-import sqlalchemy as sa
+import sqlalchemy as sql
 from app import omdb_api
 from app import rus_title
 from app import database
@@ -9,6 +9,7 @@ omdb = omdb_api.OMDB('')
 bot: tg.Bot
 converter = rus_title.Converter()
 db: database.DB
+DEBUG = False
 
 
 sessions = {}
@@ -26,15 +27,18 @@ def init_bot(token):
 
 def init_db(db_url):
     from app.models import Base
-    engine = sa.create_engine(db_url, echo=True)
+    engine = sql.create_engine(db_url, echo=True)
     Base.metadata.create_all(engine)
     global db
     db = database.DB(engine)
 
 
-def init(configs: dict):
+def init(configs: dict, debug=False):
+    global DEBUG
+    DEBUG = debug
     init_omdb(configs[strings.APIKEY_CONFIG])
     init_bot(configs[strings.TOKEN_CONFIG])
     init_db(configs[strings.DATABASE_URL_CONFIG])
-    from app import tg_bot
-    from app import models
+    if not DEBUG:
+        from app import tg_bot
+        from app import models

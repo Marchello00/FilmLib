@@ -1,8 +1,8 @@
-import app
-import argparse
-import json
-import asyncio
 import os
+import json
+import argparse
+import asyncio
+import app
 import app.strings as strings
 
 
@@ -18,9 +18,9 @@ def parse_args():
 
 
 def load_config_file(config_path):
-    with open(config_path, 'r') as f:
-        s = json.load(f)
-        return s
+    with open(config_path, 'r') as config_file:
+        config = json.load(config_file)
+        return config
 
 
 def load_config_environ(debug=False):
@@ -61,7 +61,7 @@ def main():
     except Exception:
         print(strings.FAILED_TO_LOAD_CONFIG)
         return
-    app.init(configs)
+    app.init(configs, debug=args.debug)
     if args.debug:
         app.bot.run(debug=True)
     else:

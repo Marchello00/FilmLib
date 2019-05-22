@@ -1,6 +1,6 @@
+import re
 import bs4
 import requests
-import re
 from app.strings import NONE_OMDB
 
 
@@ -15,8 +15,8 @@ class Converter:
     def __init__(self):
         pass
 
-    def get_russian(self, search, tp='movie', lang='ru'):
-        url = self.__get_url(search=search, tp=tp, lang=lang)
+    def get_russian(self, search, m_type='movie', lang='ru'):
+        url = self.__get_url(search=search, m_type=m_type, lang=lang)
         text = requests.get(url).text
         soup = bs4.BeautifulSoup(text, 'lxml')
         results = []
@@ -29,16 +29,16 @@ class Converter:
             film.title = film_info.a['title']
             film.url = self.__site + film_info.a['href']
             film.date = film_info.span.text
-            film.type = tp
+            film.type = m_type
             film.plot = part.find('p', {'class': 'overview'}).text
             results.append(film)
         return results
 
-    def __get_url(self, search, tp='movie', lang='ru'):
+    def __get_url(self, search, m_type='movie', lang='ru'):
         if self.__site[-1] != '/':
             self.__site += '/'
         url = '{site}search/{type}?query={query}'.format(
-            site=self.__site, type=tp, query=search
+            site=self.__site, type=m_type, query=search
         )
         if lang:
             url += '&language={lang}'.format(lang=lang)
@@ -87,7 +87,7 @@ class FilmRus:
         if self.omdb:
             return
         self.omdb = omdb.get_film(name=self.title, year=self.year,
-                                  tp=self.type_omdb)
+                                  m_type=self.type_omdb)
         if self.omdb.response == 'False' or \
                 not self.title.lower() == self.omdb.title.lower() or \
                 self.omdb.poster == NONE_OMDB:
@@ -102,4 +102,4 @@ class FilmRus:
         if self.omdb:
             return self.omdb
         return omdb.get_film(name=self.title, year=self.year,
-                             tp=self.type_omdb)
+                             m_type=self.type_omdb)
