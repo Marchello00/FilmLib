@@ -74,6 +74,28 @@ def add_watched_button(premarkup, index=None, watched=False):
     ])
 
 
+def add_navigate_button(premarkup, index, max_len):
+    page_buttons = []
+    if index > 0:
+        page_buttons.append({
+            'text': strings.PREV_FILM_BUTTON,
+            'callback_data':
+                '{callback_query}'
+                '{index}'.format(index=index,
+                                 callback_query=strings.PREV_CQ)
+        })
+    if index < max_len - 1:
+        page_buttons.append({
+            'text': strings.NEXT_FILM_BUTTON,
+            'callback_data':
+                '{callback_query}'
+                '{index}'.format(index=index,
+                                 callback_query=strings.NEXT_CQ)
+        })
+    if page_buttons:
+        premarkup.append(page_buttons)
+
+
 class Buttons:
     def __init__(self):
         self.__bttns = []
@@ -93,6 +115,9 @@ class Buttons:
     def add_watched(self):
         self.__bttns.append(strings.WATCHED_CQ)
 
+    def add_navigate(self):
+        self.__bttns.append(strings.NEXT_CQ)
+
     def get(self, index, max_len, film):
         markup = []
         for bttn in self.__bttns:
@@ -105,25 +130,8 @@ class Buttons:
                                      favourite=film.favourite)
             elif bttn == strings.MOREINFO_CQ:
                 add_showinfo_button(markup, index=index)
-        page_buttons = []
-        if index > 0:
-            page_buttons.append({
-                'text': strings.PREV_FILM_BUTTON,
-                'callback_data':
-                    '{callback_query}'
-                    '{index}'.format(index=index,
-                                     callback_query=strings.PREV_CQ)
-            })
-        if index < max_len - 1:
-            page_buttons.append({
-                'text': strings.NEXT_FILM_BUTTON,
-                'callback_data':
-                    '{callback_query}'
-                    '{index}'.format(index=index,
-                                     callback_query=strings.NEXT_CQ)
-            })
-        if page_buttons:
-            markup.append(page_buttons)
+            elif bttn == strings.NEXT_CQ:
+                add_navigate_button(markup, index, max_len)
         res_markup = {
             'type': 'InlineKeyboardMarkup',
             'inline_keyboard': markup

@@ -155,6 +155,7 @@ async def get_my_films(chat: Chat, match):
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
@@ -171,6 +172,7 @@ async def get_favourite_films(chat: Chat, match):
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
@@ -187,6 +189,7 @@ async def get_unwatched_films(chat: Chat, match):
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
@@ -294,6 +297,7 @@ async def search_internet(chat: Chat, title, m_type=strings.MOVIE_TYPE, limit=10
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
