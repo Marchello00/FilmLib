@@ -26,6 +26,16 @@ ADDTOFAVOURITE_CQ = '!'
 WATCHED_CQ = '_'
 REMOVEFROMFAVOURITE_CQ = '&'
 REMOVEFROMWATCHED_CQ = '@'
+SHARE_CQ = 'S'
+
+# Telegram syntax
+DEFAULT_INDEX = '{index}'
+TG_TEXT_IN_KEYBOARD = 'text'
+TG_CALLBACK_IN_KEYBOARD = 'callback_data'
+TG_CALLBACK_FORMAT = '{callback_query}{index}'
+TG_TYPE_IN_MARKUP = 'type'
+TG_INLINE_MARKUP_TYPE = 'InlineKeyboardMarkup'
+TG_INLINE_KEYBOARD_IN_MARKUP = 'inline_keyboard'
 
 # Bot messages
 FILM_NOT_FOUND = 'К сожалению, я не нашёл фильмов с таким названием'
@@ -64,6 +74,7 @@ ADD_TO_FAVOURITE_BUTTON = 'Добавить в избранное'
 REMOVE_FROM_FAVOURITE_BUTTON = 'Удалить из избранного'
 WATCHED_BUTTON = 'Отметить как просмотренное'
 UNWATCHED_BUTTON = 'Отметить как непросмотренное'
+SHARE_BUTTON = 'Поделиться'
 OLD_MSG = 'Это старое сообщение, пожалуйста, вполните поиск ещё раз'
 UNKNOWN = 'unknown'
 NO_FILMS_IN_YOUR_DB = 'В твоей фильмотеке ещё нет фильмов. ' \
@@ -102,3 +113,4 @@ PONG = 'Pong!'
 
 # Other
 NO_PICTURE_URL = 'https://fasttorrent.org/templates/tor-baza-utf/images/no_poster.jpg'
+SHARE_LINK = 'https://t.me/share/url?url={url}&text={text}'
