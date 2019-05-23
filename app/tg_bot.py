@@ -105,8 +105,13 @@ async def show_more(chat: Chat, callback_query, match):
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
         film = film.omdb
+    buttons = Buttons()
+    buttons.add_share()
+    markup = buttons.get(film=film)
     await chat.send_photo(photo=film.poster,
-                          caption=get_film_full_desc(film))
+                          caption=get_film_full_desc(film),
+                          reply_markup=json.dumps(markup)
+                          )
     return callback_query.answer()
 
 

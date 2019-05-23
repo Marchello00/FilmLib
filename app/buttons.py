@@ -7,6 +7,10 @@ def form_share_link(url, text):
     )
 
 
+def form_film_url(film):
+    return strings.FILM_URL.format(imdbid=film.imdbid)
+
+
 def add_showinfo_button(premarkup, index=strings.DEFAULT_INDEX):
     premarkup.append([
         {
@@ -130,7 +134,11 @@ class Buttons:
     def add_navigate(self):
         self.__bttns.append(strings.NEXT_CQ)
 
-    def get(self, index, max_len, film):
+    def add_share(self):
+        self.__bttns.append(strings.SHARE_CQ)
+
+    def get(self, film, index=strings.DEFAULT_INDEX,
+            max_len=strings.DEFAULT_MAXLEN):
         markup = []
         for bttn in self.__bttns:
             if bttn == strings.WATCHED_CQ and film.inlib:
@@ -146,7 +154,8 @@ class Buttons:
                 add_navigate_button(markup, index=index,
                                     max_len=max_len)
             elif bttn == strings.SHARE_CQ:
-                add_share_button(markup, index=index, url=film.url)
+                add_share_button(markup, index=index,
+                                 url=form_film_url(film))
         res_markup = {
             strings.TG_TYPE_IN_MARKUP: strings.TG_INLINE_MARKUP_TYPE,
             strings.TG_INLINE_KEYBOARD_IN_MARKUP: markup

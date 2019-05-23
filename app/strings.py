@@ -29,6 +29,7 @@ REMOVEFROMWATCHED_CQ = '@'
 SHARE_CQ = 'S'
 
 # Telegram syntax
+DEFAULT_MAXLEN = 0
 DEFAULT_INDEX = '{index}'
 TG_TEXT_IN_KEYBOARD = 'text'
 TG_CALLBACK_IN_KEYBOARD = 'callback_data'
@@ -114,3 +115,4 @@ PONG = 'Pong!'
 # Other
 NO_PICTURE_URL = 'https://fasttorrent.org/templates/tor-baza-utf/images/no_poster.jpg'
 SHARE_LINK = 'https://t.me/share/url?url={url}&text={text}'
+FILM_URL = 'https://www.imdb.com/title/{imdbid}/'
