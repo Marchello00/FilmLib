@@ -103,6 +103,8 @@ def add_navigate_button(premarkup, index, max_len):
 def add_share_button(premarkup, url, index=strings.DEFAULT_INDEX):
     premarkup.append([{
         strings.TG_TEXT_IN_KEYBOARD:
+            strings.SHARE_BUTTON,
+        strings.TG_URL_IN_KEYBOARD:
             form_share_link(url=url,
                             text=strings.SHARE_BUTTON),
         strings.TG_CALLBACK_IN_KEYBOARD:

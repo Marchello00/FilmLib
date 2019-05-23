@@ -37,6 +37,7 @@ TG_CALLBACK_FORMAT = '{callback_query}{index}'
 TG_TYPE_IN_MARKUP = 'type'
 TG_INLINE_MARKUP_TYPE = 'InlineKeyboardMarkup'
 TG_INLINE_KEYBOARD_IN_MARKUP = 'inline_keyboard'
+TG_URL_IN_KEYBOARD = 'url'
 
 # Bot messages
 FILM_NOT_FOUND = 'К сожалению, я не нашёл фильмов с таким названием'
