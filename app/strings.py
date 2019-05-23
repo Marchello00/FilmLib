@@ -77,6 +77,7 @@ REMOVE_FROM_FAVOURITE_BUTTON = 'Удалить из избранного'
 WATCHED_BUTTON = 'Отметить как просмотренное'
 UNWATCHED_BUTTON = 'Отметить как непросмотренное'
 SHARE_BUTTON = 'Поделиться'
+DEFAULT_SHARE_TEXT = ''
 OLD_MSG = 'Это старое сообщение, пожалуйста, вполните поиск ещё раз'
 UNKNOWN = 'unknown'
 NO_FILMS_IN_YOUR_DB = 'В твоей фильмотеке ещё нет фильмов. ' \

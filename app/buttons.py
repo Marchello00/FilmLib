@@ -100,13 +100,14 @@ def add_navigate_button(premarkup, index, max_len):
         premarkup.append(page_buttons)
 
 
-def add_share_button(premarkup, url, index=strings.DEFAULT_INDEX):
+def add_share_button(premarkup, url, index=strings.DEFAULT_INDEX,
+                     text=strings.DEFAULT_SHARE_TEXT):
     premarkup.append([{
         strings.TG_TEXT_IN_KEYBOARD:
             strings.SHARE_BUTTON,
         strings.TG_URL_IN_KEYBOARD:
             form_share_link(url=url,
-                            text=strings.SHARE_BUTTON),
+                            text=text),
         strings.TG_CALLBACK_IN_KEYBOARD:
             strings.TG_CALLBACK_FORMAT.format(
                 index=index,
@@ -157,7 +158,8 @@ class Buttons:
                                     max_len=max_len)
             elif bttn == strings.SHARE_CQ:
                 add_share_button(markup, index=index,
-                                 url=form_film_url(film))
+                                 url=form_film_url(film),
+                                 text=film.title)
         res_markup = {
             strings.TG_TYPE_IN_MARKUP: strings.TG_INLINE_MARKUP_TYPE,
             strings.TG_INLINE_KEYBOARD_IN_MARKUP: markup
