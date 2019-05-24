@@ -38,7 +38,8 @@ async def show_search_help(chat: Chat, match):
     return await chat.send_text(strings.SEARCH_HELP)
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.ADDTOLIBRARY_CQ_RE))
+@bot.callback(
+    r'{callback_query}(\d+)'.format(callback_query=strings.ADDTOLIBRARY_CQ_RE))
 async def add_to_lib(chat: Chat, callback_query, match):
     if not check_callback(chat, callback_query):
         return callback_query.answer(text=strings.OLD_MSG)
@@ -56,7 +57,8 @@ async def add_to_lib(chat: Chat, callback_query, match):
     return callback_query.answer(text=strings.FILM_ADDED_TO_DB)
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.REMOVEFROMLIBRARY_CQ))
+@bot.callback(r'{callback_query}(\d+)'.format(
+    callback_query=strings.REMOVEFROMLIBRARY_CQ))
 async def remove_from_lib(chat: Chat, callback_query, match):
     if not check_callback(chat, callback_query):
         return callback_query.answer(text=strings.OLD_MSG)
@@ -94,7 +96,8 @@ async def show_next_film(chat: Chat, callback_query, match):
     return callback_query.answer()
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.MOREINFO_CQ_RE))
+@bot.callback(
+    r'{callback_query}(\d+)'.format(callback_query=strings.MOREINFO_CQ_RE))
 async def show_more(chat: Chat, callback_query, match):
     if not check_callback(chat, callback_query):
         return callback_query.answer(text=strings.OLD_MSG)
@@ -102,12 +105,18 @@ async def show_more(chat: Chat, callback_query, match):
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
         film = film.omdb
+    buttons = Buttons()
+    buttons.add_share()
+    markup = buttons.get(film=film)
     await chat.send_photo(photo=film.poster,
-                          caption=get_film_full_desc(film))
+                          caption=get_film_full_desc(film),
+                          reply_markup=json.dumps(markup)
+                          )
     return callback_query.answer()
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.ADDTOFAVOURITE_CQ))
+@bot.callback(
+    r'{callback_query}(\d+)'.format(callback_query=strings.ADDTOFAVOURITE_CQ))
 async def add_to_favourites(chat: Chat, callback_query, match):
     if not check_callback(chat, callback_query):
         return callback_query.answer(text=strings.OLD_MSG)
@@ -116,7 +125,8 @@ async def add_to_favourites(chat: Chat, callback_query, match):
     return await show_film(chat, index, get_mes_id_from_cq(callback_query))
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.REMOVEFROMFAVOURITE_CQ))
+@bot.callback(r'{callback_query}(\d+)'.format(
+    callback_query=strings.REMOVEFROMFAVOURITE_CQ))
 async def remove_from_favourites(chat: Chat, callback_query, match):
     if not check_callback(chat, callback_query):
         return callback_query.answer(text=strings.OLD_MSG)
@@ -125,7 +135,8 @@ async def remove_from_favourites(chat: Chat, callback_query, match):
     return await show_film(chat, index, get_mes_id_from_cq(callback_query))
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.WATCHED_CQ))
+@bot.callback(
+    r'{callback_query}(\d+)'.format(callback_query=strings.WATCHED_CQ))
 async def add_to_watched(chat: Chat, callback_query, match):
     if not check_callback(chat, callback_query):
         return callback_query.answer(text=strings.OLD_MSG)
@@ -134,7 +145,8 @@ async def add_to_watched(chat: Chat, callback_query, match):
     return await show_film(chat, index, get_mes_id_from_cq(callback_query))
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.REMOVEFROMWATCHED_CQ))
+@bot.callback(r'{callback_query}(\d+)'.format(
+    callback_query=strings.REMOVEFROMWATCHED_CQ))
 async def remove_from_watched(chat: Chat, callback_query, match):
     if not check_callback(chat, callback_query):
         return callback_query.answer(text=strings.OLD_MSG)
@@ -155,6 +167,7 @@ async def get_my_films(chat: Chat, match):
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
@@ -171,6 +184,7 @@ async def get_favourite_films(chat: Chat, match):
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
@@ -187,6 +201,7 @@ async def get_unwatched_films(chat: Chat, match):
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
@@ -224,9 +239,11 @@ def set_favourite(chat: Chat, callback_query, index, favourite):
         db.insert_film(film)
     if db.film_in_chat_db(chat.id, film.imdbid, favourite=favourite):
         if favourite:
-            return callback_query.answer(text=strings.FILM_ALREADY_IN_FAVOURITES)
+            return callback_query.answer(
+                text=strings.FILM_ALREADY_IN_FAVOURITES)
         else:
-            return callback_query.answer(text=strings.FILM_ALREADY_NOT_IN_FAVOURITES)
+            return callback_query.answer(
+                text=strings.FILM_ALREADY_NOT_IN_FAVOURITES)
     db.set_favourite(chat_id=chat.id, film_id=film.imdbid,
                      favourite=favourite)
     film_lists[chat.id][index].favourite = favourite
@@ -259,11 +276,13 @@ def set_watched(chat: Chat, callback_query, index, watched):
 
 
 def search_media(title, m_type=strings.MOVIE_TYPE):
-    return [film for film in converter.get_russian(title, m_type=m_type, lang=None)
+    return [film for film in
+            converter.get_russian(title, m_type=m_type, lang=None)
             if film.poster]
 
 
-async def search_internet(chat: Chat, title, m_type=strings.MOVIE_TYPE, limit=10,
+async def search_internet(chat: Chat, title, m_type=strings.MOVIE_TYPE,
+                          limit=10,
                           tp2=None):
     films = search_media(title, m_type=m_type)
     if tp2 is not None:
@@ -294,6 +313,7 @@ async def search_internet(chat: Chat, title, m_type=strings.MOVIE_TYPE, limit=10
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(chat, 0)
 
