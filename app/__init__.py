@@ -1,4 +1,5 @@
-import aiotg as tg
+import aiogram
+import aiohttp
 import sqlalchemy as sql
 from app.debug import DEBUG
 from app import omdb_api
@@ -6,10 +7,12 @@ from app import rus_title
 from app import database
 from app import strings
 
-omdb = omdb_api.OMDB('')
-bot: tg.Bot
-converter = rus_title.Converter()
+session = aiohttp.ClientSession()
+omdb = omdb_api.OMDB('', session)
+bot: aiogram.Bot
+converter = rus_title.Converter(session)
 db: database.DB
+dp: aiogram.Dispatcher
 
 
 sessions = {}
@@ -22,7 +25,9 @@ def init_omdb(apikey):
 
 def init_bot(token):
     global bot
-    bot = tg.Bot(token)
+    global dp
+    bot = aiogram.Bot(token)
+    dp = aiogram.Dispatcher(bot)
 
 
 def init_db(db_url):
@@ -41,3 +46,7 @@ def init(configs: dict, debug=False):
     init_db(configs[strings.DATABASE_URL_CONFIG])
     from app import models
     from app import tg_bot
+
+
+def run():
+    aiogram.executor.start_polling(dp)

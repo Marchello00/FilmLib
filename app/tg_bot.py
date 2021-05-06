@@ -1,49 +1,50 @@
 import json
 import re
 from collections import defaultdict
-from aiotg import Chat
+from aiogram import types
 from app.buttons import Buttons
 from app import strings
-from app import bot, db, converter
+from app import db, dp, converter
 
 film_lists = defaultdict(list)
 last_film_msg = defaultdict(int)
 buttons_list = defaultdict(Buttons)
 
 
-@bot.command(r'/echo (.+)')
-async def echo(chat: Chat, match):
-    return await chat.send_text(match.group(1))
+@dp.message_handler(commands=['echo'])
+async def echo(message: types.Message):
+    await message.reply(message.text)
 
 
-@bot.command(r'/ping')
-async def ping(chat: Chat, match):
-    return await chat.send_text(strings.PONG)
+@dp.message_handler(commands=['ping'])
+async def ping(message: types.Message):
+    await message.reply('Pong!')
 
 
-@bot.command(r'/search (.+)')
-async def search_films(chat: Chat, match):
-    title = match.group(1)
-    return await search_internet(chat, title=title)
+@dp.message_handler(commands=['search'])
+async def search_films(message: types.Message):
+    if not message.text:
+        await message.reply(strings.SEARCH_HELP)
+        return
+    await search_internet(message)
 
 
-@bot.command(r'/searchseries (.+)')
-async def search_series(chat: Chat, match):
-    title = match.group(1)
-    return await search_internet(chat, title=title, m_type=strings.SERIES_TYPE)
+@dp.message_handler(commands=['searchseries'])
+async def search_series(message: types.Message):
+    if not message.text:
+        await message.reply(strings.SEARCH_HELP)
+        return
+    return await search_internet(message, m_type=strings.SERIES_TYPE)
 
 
-@bot.command(r'/search')
-async def show_search_help(chat: Chat, match):
-    return await chat.send_text(strings.SEARCH_HELP)
-
-
-@bot.callback(
-    r'{callback_query}(\d+)'.format(callback_query=strings.ADDTOLIBRARY_CQ_RE))
-async def add_to_lib(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.ADDTOLIBRARY_CQ))
+async def add_to_lib(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    chat = callback_query.message.chat
+    index = int(callback_query.data[len(strings.ADDTOLIBRARY_CQ):])
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
         film = film.omdb
@@ -53,16 +54,19 @@ async def add_to_lib(chat: Chat, callback_query, match):
         return callback_query.answer(text=strings.FILM_ALREADY_IN_DB)
     db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
     film_lists[chat.id][index].inlib = True
-    await show_film(chat, index, get_mes_id_from_cq(callback_query))
-    return callback_query.answer(text=strings.FILM_ADDED_TO_DB)
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer(text=strings.FILM_ADDED_TO_DB)
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(
-    callback_query=strings.REMOVEFROMLIBRARY_CQ))
-async def remove_from_lib(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.REMOVEFROMLIBRARY_CQ))
+async def remove_from_lib(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    chat = callback_query.message.chat
+    index = int(callback_query.data[len(strings.REMOVEFROMLIBRARY_CQ):])
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
         film = film.omdb
@@ -74,92 +78,120 @@ async def remove_from_lib(chat: Chat, callback_query, match):
     film_lists[chat.id][index].inlib = False
     film_lists[chat.id][index].favourite = False
     film_lists[chat.id][index].watched = False
-    await show_film(chat, index, get_mes_id_from_cq(callback_query))
-    return callback_query.answer(text=strings.FILM_REMOVED_FROM_DB)
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer(text=strings.FILM_REMOVED_FROM_DB)
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.PREV_CQ))
-async def show_prev_film(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1)) - 1
-    await show_film(chat, index, get_mes_id_from_cq(callback_query))
-    return callback_query.answer()
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.PREV_CQ))
+async def show_prev_film(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+    index = int(callback_query.data[len(strings.PREV_CQ):]) - 1
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer()
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(callback_query=strings.NEXT_CQ))
-async def show_next_film(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1)) + 1
-    await show_film(chat, index, get_mes_id_from_cq(callback_query))
-    return callback_query.answer()
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.NEXT_CQ))
+async def show_next_film(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    index = int(callback_query.data[len(strings.NEXT_CQ):]) + 1
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer()
 
 
-@bot.callback(
-    r'{callback_query}(\d+)'.format(callback_query=strings.MOREINFO_CQ_RE))
-async def show_more(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1))
-    film = film_lists[chat.id][index]
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.MOREINFO_CQ))
+async def show_more(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    index = int(callback_query.data[len(strings.MOREINFO_CQ):])
+    film = film_lists[callback_query.message.chat.id][index]
     if hasattr(film, 'omdb'):
         film = film.omdb
-    buttons = Buttons()
-    buttons.add_share()
-    markup = buttons.get(film=film)
-    await chat.send_photo(photo=film.poster,
-                          caption=get_film_full_desc(film),
-                          reply_markup=json.dumps(markup)
-                          )
-    return callback_query.answer()
+    btns = Buttons()
+    btns.add_share()
+    markup = btns.get(film=film)
+    desc = get_film_full_desc(film)
+    if len(desc) > 1000:
+        desc = desc[:997] + '...'
+    await dp.bot.send_photo(chat_id=callback_query.message.chat.id,
+                            photo=film.poster,
+                            caption=desc,
+                            reply_markup=json.dumps(markup)
+                            )
+    await callback_query.answer()
 
 
-@bot.callback(
-    r'{callback_query}(\d+)'.format(callback_query=strings.ADDTOFAVOURITE_CQ))
-async def add_to_favourites(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1))
-    set_favourite(chat, callback_query, index, True)
-    return await show_film(chat, index, get_mes_id_from_cq(callback_query))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.ADDTOFAVOURITE_CQ))
+async def add_to_favourites(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    index = int(callback_query.data[len(strings.ADDTOFAVOURITE_CQ):])
+    await set_favourite(callback_query.message.chat, callback_query, index,
+                        True)
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer()
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(
-    callback_query=strings.REMOVEFROMFAVOURITE_CQ))
-async def remove_from_favourites(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1))
-    set_favourite(chat, callback_query, index, False)
-    return await show_film(chat, index, get_mes_id_from_cq(callback_query))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.REMOVEFROMFAVOURITE_CQ))
+async def remove_from_favourites(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    index = int(callback_query.data[len(strings.REMOVEFROMFAVOURITE_CQ):])
+    await set_favourite(callback_query.message.chat, callback_query, index,
+                        False)
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer()
 
 
-@bot.callback(
-    r'{callback_query}(\d+)'.format(callback_query=strings.WATCHED_CQ))
-async def add_to_watched(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1))
-    set_watched(chat, callback_query, index, True)
-    return await show_film(chat, index, get_mes_id_from_cq(callback_query))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.WATCHED_CQ))
+async def add_to_watched(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    index = int(callback_query.data[len(strings.WATCHED_CQ):])
+    await set_watched(callback_query.message.chat, callback_query, index, True)
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer()
 
 
-@bot.callback(r'{callback_query}(\d+)'.format(
-    callback_query=strings.REMOVEFROMWATCHED_CQ))
-async def remove_from_watched(chat: Chat, callback_query, match):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
-    index = int(match.group(1))
-    set_watched(chat, callback_query, index, False)
-    return await show_film(chat, index, get_mes_id_from_cq(callback_query))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith(strings.REMOVEFROMWATCHED_CQ))
+async def remove_from_watched(callback_query: types.CallbackQuery):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
+    index = int(callback_query.data[len(strings.REMOVEFROMWATCHED_CQ):])
+    await set_watched(callback_query.message.chat, callback_query, index,
+                      False)
+    await show_film(callback_query.message, index,
+                    callback_query.message.message_id)
+    await callback_query.answer()
 
 
-@bot.command(r'/myfilms')
-async def get_my_films(chat: Chat, match):
+@dp.message_handler(commands=['myfilms'])
+async def get_my_films(message: types.Message):
+    chat = message.chat
     films = db.get_films_by_chat(chat_id=chat.id)
     if not films:
-        return await chat.send_text(text=strings.NO_FILMS_IN_YOUR_DB)
+        await message.reply(text=strings.NO_FILMS_IN_YOUR_DB)
+        return
     global film_lists, buttons_list
     film_lists[chat.id] = films
     buttons = Buttons()
@@ -169,14 +201,16 @@ async def get_my_films(chat: Chat, match):
     buttons.add_lib()
     buttons.add_navigate()
     buttons_list[chat.id] = buttons
-    return await show_film(chat, 0)
+    return await show_film(message, 0)
 
 
-@bot.command(r'/favourites')
-async def get_favourite_films(chat: Chat, match):
+@dp.message_handler(commands=['favourites'])
+async def get_favourite_films(message: types.Message):
+    chat = message.chat
     films = db.get_films_by_chat(chat_id=chat.id, favourite=True)
     if not films:
-        return await chat.send_text(text=strings.NO_FAVOURITES)
+        await message.reply(text=strings.NO_FAVOURITES)
+        return
     global film_lists, buttons_list
     film_lists[chat.id] = films
     buttons = Buttons()
@@ -186,14 +220,16 @@ async def get_favourite_films(chat: Chat, match):
     buttons.add_lib()
     buttons.add_navigate()
     buttons_list[chat.id] = buttons
-    return await show_film(chat, 0)
+    return await show_film(message, 0)
 
 
-@bot.command(r'/unwatched')
-async def get_unwatched_films(chat: Chat, match):
+@dp.message_handler(commands=['unwatched'])
+async def get_unwatched_films(message: types.Message):
+    chat = message.chat
     films = db.get_films_by_chat(chat_id=chat.id, watched=False)
     if not films:
-        return await chat.send_text(text=strings.NO_UNWATCHED)
+        await message.reply(text=strings.NO_UNWATCHED)
+        return
     global film_lists, buttons_list
     film_lists[chat.id] = films
     buttons = Buttons()
@@ -203,34 +239,36 @@ async def get_unwatched_films(chat: Chat, match):
     buttons.add_lib()
     buttons.add_navigate()
     buttons_list[chat.id] = buttons
-    return await show_film(chat, 0)
+    await show_film(message, 0)
 
 
-@bot.command(r'/stop')
-async def stop(chat: Chat, match):
-    return await chat.send_text(strings.GOODBYE)
+@dp.message_handler(commands=['stop'])
+async def stop(message: types.Message):
+    await message.reply(strings.GOODBYE)
 
 
-@bot.command(r'/start')
-async def start(chat: Chat, match):
-    return await chat.send_text(
+@dp.message_handler(commands=['start'])
+async def start(message: types.Message):
+    await message.reply(
         '{hello}\n{help}'.format(hello=strings.HELLO, help=strings.HELP))
 
 
-@bot.command(r'/help')
-async def helper(chat: Chat, match):
-    return await chat.send_text(strings.HELP)
+@dp.message_handler(commands=['help'])
+async def helper(message: types.Message):
+    await message.reply(strings.HELP)
 
 
-@bot.default
-async def default_search(chat: Chat, message):
-    title = message['text']
-    return await search_internet(chat, title=title, tp2=strings.SERIES_TYPE)
+@dp.message_handler()
+async def default_search(message: types.Message):
+    await search_internet(message, tp2=strings.SERIES_TYPE)
 
 
-def set_favourite(chat: Chat, callback_query, index, favourite):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
+async def set_favourite(chat: types.Chat, callback_query: types.CallbackQuery,
+                        index,
+                        favourite):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
     global film_lists
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
@@ -239,23 +277,27 @@ def set_favourite(chat: Chat, callback_query, index, favourite):
         db.insert_film(film)
     if db.film_in_chat_db(chat.id, film.imdbid, favourite=favourite):
         if favourite:
-            return callback_query.answer(
+            await callback_query.answer(
                 text=strings.FILM_ALREADY_IN_FAVOURITES)
         else:
-            return callback_query.answer(
+            await callback_query.answer(
                 text=strings.FILM_ALREADY_NOT_IN_FAVOURITES)
+        return
     db.set_favourite(chat_id=chat.id, film_id=film.imdbid,
                      favourite=favourite)
     film_lists[chat.id][index].favourite = favourite
     if favourite:
-        return callback_query.answer(text=strings.FILM_ADDED_TO_FAVOURITES)
+        await callback_query.answer(text=strings.FILM_ADDED_TO_FAVOURITES)
     else:
-        return callback_query.answer(text=strings.FILM_REMOVED_FROM_FAVOURITES)
+        await callback_query.answer(text=strings.FILM_REMOVED_FROM_FAVOURITES)
 
 
-def set_watched(chat: Chat, callback_query, index, watched):
-    if not check_callback(chat, callback_query):
-        return callback_query.answer(text=strings.OLD_MSG)
+async def set_watched(chat: types.Chat, callback_query: types.CallbackQuery,
+                      index,
+                      watched):
+    if not check_callback(callback_query):
+        await callback_query.answer(text=strings.OLD_MSG)
+        return
     global film_lists
     film = film_lists[chat.id][index]
     if hasattr(film, 'omdb'):
@@ -264,32 +306,35 @@ def set_watched(chat: Chat, callback_query, index, watched):
         db.insert_film(film)
     if db.film_in_chat_db(chat.id, film.imdbid, watched=watched):
         if watched:
-            return callback_query.answer(text=strings.FILM_ALREADY_WATCHED)
+            await callback_query.answer(text=strings.FILM_ALREADY_WATCHED)
         else:
-            return callback_query.answer(text=strings.FILM_ALREADY_NOT_WATCHED)
+            await callback_query.answer(text=strings.FILM_ALREADY_NOT_WATCHED)
+        return
     db.set_watched(chat_id=chat.id, film_id=film.imdbid, watched=watched)
     film_lists[chat.id][index].watched = watched
     if watched:
-        return callback_query.answer(text=strings.FILM_ADDED_TO_WATCHED)
+        await callback_query.answer(text=strings.FILM_ADDED_TO_WATCHED)
     else:
-        return callback_query.answer(text=strings.FILM_REMOVED_FROM_WATCHED)
+        await callback_query.answer(text=strings.FILM_REMOVED_FROM_WATCHED)
 
 
-def search_media(title, m_type=strings.MOVIE_TYPE):
+async def search_media(title, m_type=strings.MOVIE_TYPE):
     return [film for film in
-            converter.get_russian(title, m_type=m_type, lang=None)
+            await converter.get_russian(title, m_type=m_type, lang=None)
             if film.poster]
 
 
-async def search_internet(chat: Chat, title, m_type=strings.MOVIE_TYPE,
+async def search_internet(message: types.Message, m_type=strings.MOVIE_TYPE,
                           limit=10,
                           tp2=None):
-    films = search_media(title, m_type=m_type)
+    title = message.text
+    films = await search_media(title, m_type=m_type)
+    chat = message.chat
     if tp2 is not None:
-        films += search_media(title, m_type=tp2)
+        films += await search_media(title, m_type=tp2)
     cnt = 0
     for film, i in zip(films, range(len(films))):
-        film.set_omdb()
+        await film.set_omdb()
         cnt += film.omdb.response == 'True'
         if cnt == limit:
             films = films[:i + 1]
@@ -297,9 +342,10 @@ async def search_internet(chat: Chat, title, m_type=strings.MOVIE_TYPE,
     films = [film for film in films if film.omdb.response == 'True']
     if not films:
         if m_type == strings.MOVIE_TYPE:
-            return await chat.send_text(text=strings.FILM_NOT_FOUND)
+            await message.reply(text=strings.FILM_NOT_FOUND)
         else:
-            return await chat.send_text(text=strings.SERIES_NOT_FOUND)
+            await message.reply(text=strings.SERIES_NOT_FOUND)
+        return
     global film_lists, buttons_list
     film_lists[chat.id] = films
     for i, film in enumerate(films):
@@ -315,14 +361,15 @@ async def search_internet(chat: Chat, title, m_type=strings.MOVIE_TYPE,
     buttons.add_lib()
     buttons.add_navigate()
     buttons_list[chat.id] = buttons
-    return await show_film(chat, 0)
+    return await show_film(message, 0)
 
 
-def check_callback(chat: Chat, callback_query):
-    if get_mes_id_from_cq(callback_query) != last_film_msg[chat.id] or not \
-            film_lists[chat.id]:
-        return False
-    return True
+def check_callback(callback_query: types.CallbackQuery):
+    chat = callback_query.message.chat
+    return bool(
+        callback_query.message.message_id == last_film_msg[chat.id]
+        and film_lists[chat.id]
+    )
 
 
 def get_film_desc(film):
@@ -342,6 +389,8 @@ def get_film_full_desc(film):
             attr = film.__getattr__(pattern)
             if not attr:
                 attr = strings.UNKNOWN
+            if len(attr) > 200:
+                attr = attr[:197] + '...'
             dct.update({pattern: attr})
     return strings.FULL_DESC.format(
         **dct
@@ -359,31 +408,35 @@ def get_mes_id_from_resp(msg):
 
 
 def input_media_photo(poster, caption):
-    inlinemedia = {
+    return {
         'type': 'photo',
         'media': poster,
         'caption': caption
     }
-    return inlinemedia
 
 
-async def show_film(chat: Chat, index, mes_id=None):
-    films = film_lists[chat.id]
+async def show_film(message: types.Message, index, msg_id=None):
+    films = film_lists[message.chat.id]
     film = films[index]
-    markup = buttons_list[chat.id].get(index=index,
-                                       max_len=len(films),
-                                       film=film)
+    markup = buttons_list[message.chat.id].get(index=index,
+                                               max_len=len(films),
+                                               film=film)
+    if hasattr(film, 'omdb'):
+        film = film.omdb
     if not hasattr(film, 'poster') or not film.poster or \
             film.poster == strings.NONE_OMDB:
         film.poster = strings.NO_PICTURE_URL
-    if not mes_id:
-        msg = await chat.send_photo(photo=film.poster,
-                                    caption=get_film_desc(film),
-                                    reply_markup=json.dumps(markup))
-        mes_id = get_mes_id_from_resp(msg)
-        last_film_msg[chat.id] = mes_id
+    if msg_id is None:
+        resp = await dp.bot.send_photo(chat_id=message.chat.id,
+                                       photo=film.poster,
+                                       caption=get_film_desc(film),
+                                       reply_markup=json.dumps(markup))
+        last_film_msg[message.chat.id] = resp.message_id
     else:
-        bot.api_call('editMessageMedia', chat_id=chat.id, message_id=mes_id,
-                     media=json.dumps(
-                         input_media_photo(film.poster, get_film_desc(film))),
-                     reply_markup=json.dumps(markup))
+        await dp.bot.edit_message_media(chat_id=message.chat.id,
+                                        message_id=msg_id,
+                                        media=json.dumps(
+                                            input_media_photo(film.poster,
+                                                              get_film_desc(
+                                                                  film))),
+                                        reply_markup=json.dumps(markup))

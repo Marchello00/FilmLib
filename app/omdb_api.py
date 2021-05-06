@@ -1,5 +1,4 @@
 import json
-import requests
 
 
 class FilmOMDB:
@@ -13,14 +12,11 @@ class FilmOMDB:
         raise AttributeError
 
     def __repr__(self):
-        text = ''
-        for param in self.__dict__:
-            if not callable(param) and not param.startswith('_'):
-                text += '{name}: {value}\n'.format(
-                    name=param,
-                    value=getattr(self, param)
-                )
-        return text
+        return ''.join(
+            '{name}: {value}\n'.format(name=param, value=getattr(self, param))
+            for param in self.__dict__
+            if not callable(param) and not param.startswith('_')
+        )
 
 
 class OMDB:
@@ -36,10 +32,11 @@ class OMDB:
 
     __site = 'http://www.omdbapi.com/'
 
-    def __init__(self, key):
+    def __init__(self, key, session):
         self.__apikey = key
+        self.session = session
 
-    def get_film(self, name, year=None, m_type=None):
+    async def get_film(self, name, year=None, m_type=None):
         """
         Search film by concrete correct title
         (optional year, type)
@@ -49,13 +46,14 @@ class OMDB:
         :return: Information about the film found (FilmOMDB)
         """
         url = self.__get_url(title=name, year=year, type=m_type)
-        request = requests.get(url)
+        async with self.session.get(url) as resp:
+            text = await resp.text()
         try:
-            return FilmOMDB(json.loads(request.text))
+            return FilmOMDB(json.loads(text))
         except Exception:
             return FilmOMDB({'response': 'False'})
 
-    def search_film(self, search, year=None, m_type=None):
+    async def search_film(self, search, year=None, m_type=None):
         """
         Search films/series/episodes by keywords
         :param search: Keywords
@@ -64,18 +62,20 @@ class OMDB:
         :return: Information about the films found (FilmOMDB)
         """
         url = self.__get_url(search=search, year=year, type=m_type)
-        request = requests.get(url)
-        return [FilmOMDB(film) for film in json.loads(request.text)['Search']]
+        async with self.session.get(url) as resp:
+            text = await resp.text()
+        return [FilmOMDB(film) for film in json.loads(text)['Search']]
 
-    def get_by_id(self, film_id):
+    async def get_by_id(self, film_id):
         """
         Search movie by IMDBid's
         :param film_id: IMDBid
         :return: Information about the film found (FilmOMDB)
         """
         url = self.__get_url(id=film_id)
-        request = requests.get(url)
-        return FilmOMDB(json.loads(request.text))
+        async with self.session.get(url) as resp:
+            text = await resp.text()
+        return FilmOMDB(json.loads(text))
 
     def __get_url(self, **kwargs):
         url = self.__site

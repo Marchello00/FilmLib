@@ -1,5 +1,5 @@
-aiotg
-requests
+aiogram
+aiohttp
 bs4
 sqlalchemy
 psycopg2

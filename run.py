@@ -43,14 +43,6 @@ def load_config_environ(debug=False):
     return config
 
 
-async def start():
-    await app.bot.loop()
-
-
-async def stop():
-    app.bot.stop()
-
-
 def main():
     args = parse_args()
     try:
@@ -62,16 +54,7 @@ def main():
         print(strings.FAILED_TO_LOAD_CONFIG)
         return
     app.init(configs, debug=args.debug)
-    if args.debug:
-        app.bot.run(debug=True)
-    else:
-        loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(start())
-        except KeyboardInterrupt:
-            pass
-        finally:
-            loop.run_until_complete(stop())
+    app.run()
 
 
 if __name__ == '__main__':

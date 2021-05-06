@@ -1,7 +1,6 @@
 import re
 import bs4
-import requests
-from app.strings import NONE_OMDB
+from . import strings
 
 
 class Converter:
@@ -12,25 +11,31 @@ class Converter:
 
     __site = 'https://www.themoviedb.org/'
 
-    def __init__(self):
-        pass
+    def __init__(self, session):
+        self.session = session
 
-    def get_russian(self, search, m_type='movie', lang='ru'):
+    async def get_russian(self, search, m_type='movie', lang='en'):
         url = self.__get_url(search=search, m_type=m_type, lang=lang)
-        text = requests.get(url).text
+        async with self.session.get(url) as resp:
+            text = await resp.text()
         soup = bs4.BeautifulSoup(text, 'lxml')
         results = []
-        for part in soup.find_all('div', {'class': 'item poster card'}):
+        for part in soup.find_all('div', {'class': 'card v4 tight'}):
             film = FilmRus()
-            img_src = part.find('div', {'class': 'image_content'}).a.img
+            img_src = part.find('div', {'class': 'poster'}).a.img
             if img_src:
-                film.poster = img_src.get('data-src')
-            film_info = part.find('div', {'class': 'flex'})
-            film.title = film_info.a['title']
-            film.url = self.__site + film_info.a['href']
-            film.date = film_info.span.text
+                film.poster = self.__site + img_src.get('src')
+            film_info = part.find('div', {'class': 'title'})
+            film.title = film_info.div.a.h2.text
+            film.url = self.__site + film_info.div.a['href']
+            film.date = ""
+            if film_info.span:
+                film.date = film_info.span.text
             film.type = m_type
-            film.plot = part.find('p', {'class': 'overview'}).text
+            overview = part.find('div', {'class': 'overview'}).p
+            film.plot = ""
+            if overview:
+                film.plot = overview.text
             results.append(film)
         return results
 
@@ -59,19 +64,15 @@ class FilmRus:
         self.omdb = None
 
     def __repr__(self):
-        text = ''
-        for param in self.__dict__:
-            if not callable(param) and not param.startswith('_'):
-                text += '{name}: {value}\n'.format(
-                    name=param,
-                    value=getattr(self, param)
-                )
-        return text
+        return ''.join(
+            '{name}: {value}\n'.format(name=param, value=getattr(self, param))
+            for param in self.__dict__
+            if not callable(param) and not param.startswith('_')
+        )
 
     def __setattr__(self, key, value):
-        if key == 'date':
-            if value:
-                self.year = re.findall(r'\d\d\d\d', value)[0]
+        if key == 'date' and value:
+            self.year = re.findall(r'\d\d\d\d', value)[0]
         super().__setattr__(key, value)
 
     def __type_omdb(self):
@@ -82,24 +83,27 @@ class FilmRus:
             return self.__type_omdb()
         raise AttributeError
 
-    def set_omdb(self):
-        from app import omdb
+    async def set_omdb(self):
+        from . import omdb
         if self.omdb:
             return
-        self.omdb = omdb.get_film(name=self.title, year=self.year,
-                                  m_type=self.type_omdb)
-        if self.omdb.response == 'False' or \
-                not self.title.lower() == self.omdb.title.lower() or \
-                self.omdb.poster == NONE_OMDB:
+        self.omdb = await omdb.get_film(name=self.title, year=self.year,
+                                        m_type=self.type_omdb)
+        if (
+                self.omdb.response == 'False'
+                or self.title.lower() != self.omdb.title.lower()
+                or self.omdb.poster == strings.NONE_OMDB
+        ):
             self.title = self.title.replace('(', '')
             self.title = self.title.replace(')', '')
-            self.omdb = omdb.get_film(name=self.title)
-        if not hasattr(self.omdb, 'poster') or self.omdb.poster == NONE_OMDB:
+            self.omdb = await omdb.get_film(name=self.title)
+        if not hasattr(self.omdb,
+                       'poster') or self.omdb.poster == strings.NONE_OMDB:
             self.omdb.poster = self.poster
 
-    def get_omdb(self):
-        from app import omdb
+    async def get_omdb(self):
+        from . import omdb
         if self.omdb:
             return self.omdb
-        return omdb.get_film(name=self.title, year=self.year,
-                             m_type=self.type_omdb)
+        return await omdb.get_film(name=self.title, year=self.year,
+                                   m_type=self.type_omdb)
