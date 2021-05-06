@@ -27,6 +27,7 @@ WATCHED_CQ = '_'
 REMOVEFROMFAVOURITE_CQ = '&'
 REMOVEFROMWATCHED_CQ = '@'
 SHARE_CQ = 'S'
+WATCH_CQ = 'W'
 
 # Telegram syntax
 DEFAULT_MAXLEN = 0
@@ -77,6 +78,7 @@ REMOVE_FROM_FAVOURITE_BUTTON = 'Удалить из избранного'
 WATCHED_BUTTON = 'Отметить как просмотренное'
 UNWATCHED_BUTTON = 'Отметить как непросмотренное'
 SHARE_BUTTON = 'Поделиться'
+WATCH_BUTTON = 'Смотреть'
 DEFAULT_SHARE_TEXT = ''
 OLD_MSG = 'Это старое сообщение, пожалуйста, вполните поиск ещё раз'
 UNKNOWN = 'unknown'
@@ -111,6 +113,11 @@ SEARCH_HELP = '''Если хочешь использовать поиск, вв
 /search <название фильма>
 Например:
 /search Аватар
+'''
+SEARCHSERIES_HELP = '''Если хочешь использовать поиск, введи:
+/searchseries <название сериала>
+Например:
+/searchseries Викинги
 '''
 PONG = 'Pong!'
 

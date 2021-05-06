@@ -1,5 +1,7 @@
 import json
 import re
+import asyncio
+from app.search_to_watch import search_where_to_watch
 from collections import defaultdict
 from aiogram import types
 from app.buttons import Buttons
@@ -23,18 +25,19 @@ async def ping(message: types.Message):
 
 @dp.message_handler(commands=['search'])
 async def search_films(message: types.Message):
-    if not message.text:
+    if not message.get_args():
         await message.reply(strings.SEARCH_HELP)
         return
-    await search_internet(message)
+    await search_internet(message.get_args(), message)
 
 
 @dp.message_handler(commands=['searchseries'])
 async def search_series(message: types.Message):
-    if not message.text:
-        await message.reply(strings.SEARCH_HELP)
+    if not message.get_args():
+        await message.reply(strings.SEARCHSERIES_HELP)
         return
-    return await search_internet(message, m_type=strings.SERIES_TYPE)
+    return await search_internet(message.get_args(), message,
+                                 m_type=strings.SERIES_TYPE)
 
 
 @dp.callback_query_handler(
@@ -88,6 +91,7 @@ async def remove_from_lib(callback_query: types.CallbackQuery):
 async def show_prev_film(callback_query: types.CallbackQuery):
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
+        return
     index = int(callback_query.data[len(strings.PREV_CQ):]) - 1
     await show_film(callback_query.message, index,
                     callback_query.message.message_id)
@@ -117,6 +121,7 @@ async def show_more(callback_query: types.CallbackQuery):
     if hasattr(film, 'omdb'):
         film = film.omdb
     btns = Buttons()
+    btns.add_watch()
     btns.add_share()
     markup = btns.get(film=film)
     desc = get_film_full_desc(film)
@@ -260,7 +265,7 @@ async def helper(message: types.Message):
 
 @dp.message_handler()
 async def default_search(message: types.Message):
-    await search_internet(message, tp2=strings.SERIES_TYPE)
+    await search_internet(message.text, message, tp2=strings.SERIES_TYPE)
 
 
 async def set_favourite(chat: types.Chat, callback_query: types.CallbackQuery,
@@ -324,10 +329,11 @@ async def search_media(title, m_type=strings.MOVIE_TYPE):
             if film.poster]
 
 
-async def search_internet(message: types.Message, m_type=strings.MOVIE_TYPE,
+async def search_internet(title: str,
+                          message: types.Message,
+                          m_type=strings.MOVIE_TYPE,
                           limit=10,
                           tp2=None):
-    title = message.text
     films = await search_media(title, m_type=m_type)
     chat = message.chat
     if tp2 is not None:
@@ -347,6 +353,10 @@ async def search_internet(message: types.Message, m_type=strings.MOVIE_TYPE,
             await message.reply(text=strings.SERIES_NOT_FOUND)
         return
     global film_lists, buttons_list
+    watch_links = await asyncio.gather(
+        *[search_where_to_watch(film.title) for film in films])
+    for film, link in zip(films, watch_links):
+        film.watch_link = link
     film_lists[chat.id] = films
     for i, film in enumerate(films):
         inlib = db.film_in_chat_db(chat_id=chat.id,
@@ -359,6 +369,7 @@ async def search_internet(message: types.Message, m_type=strings.MOVIE_TYPE,
     buttons.add_favourites()
     buttons.add_watched()
     buttons.add_lib()
+    buttons.add_watch()
     buttons.add_navigate()
     buttons_list[chat.id] = buttons
     return await show_film(message, 0)
@@ -418,6 +429,8 @@ def input_media_photo(poster, caption):
 async def show_film(message: types.Message, index, msg_id=None):
     films = film_lists[message.chat.id]
     film = films[index]
+    if not hasattr(film, 'watch_link'):
+        film.watch_link = await search_where_to_watch(film.title)
     markup = buttons_list[message.chat.id].get(index=index,
                                                max_len=len(films),
                                                film=film)

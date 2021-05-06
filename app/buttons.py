@@ -114,6 +114,18 @@ def add_share_button(premarkup, url, index=strings.DEFAULT_INDEX,
                 callback_query=strings.SHARE_CQ)
     }])
 
+def add_watch_button(premarkup, url, index=strings.DEFAULT_INDEX):
+    premarkup.append([{
+        strings.TG_TEXT_IN_KEYBOARD:
+            strings.WATCH_BUTTON,
+        strings.TG_URL_IN_KEYBOARD:
+            url,
+        strings.TG_CALLBACK_IN_KEYBOARD:
+            strings.TG_CALLBACK_FORMAT.format(
+                index=index,
+                callback_query=strings.WATCH_CQ)
+    }])
+
 
 class Buttons:
     def __init__(self):
@@ -140,6 +152,9 @@ class Buttons:
     def add_share(self):
         self.__bttns.append(strings.SHARE_CQ)
 
+    def add_watch(self):
+        self.__bttns.append(strings.WATCH_CQ)
+
     def get(self, film, index=strings.DEFAULT_INDEX,
             max_len=strings.DEFAULT_MAXLEN):
         markup = []
@@ -160,8 +175,11 @@ class Buttons:
                 add_share_button(markup, index=index,
                                  url=form_film_url(film),
                                  text=film.title)
-        res_markup = {
+            elif bttn == strings.WATCH_CQ:
+                if film.watch_link:
+                    add_watch_button(markup, index=index,
+                                     url=film.watch_link)
+        return {
             strings.TG_TYPE_IN_MARKUP: strings.TG_INLINE_MARKUP_TYPE,
             strings.TG_INLINE_KEYBOARD_IN_MARKUP: markup
         }
-        return res_markup
