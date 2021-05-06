@@ -6,13 +6,14 @@ import datetime
 
 class FilmOMDB:
     def __init__(self, dct: tp.Dict[tp.Any, tp.Any]) -> None:
-        self.poster = ""
-        self.favourite = False
-        self.watched = False
-        self.inlib = False
-        self.created_tm = datetime.datetime.utcnow()
-
         self.dct = {key.lower(): value for key, value in dct.items()}
+
+        self.poster = self.dct.get("poster", "")
+        self.favourite = self.dct.get("favourite", False)
+        self.watched = self.dct.get("watched", False)
+        self.inlib = self.dct.get("inlib", False)
+        self.created_tm = self.dct.get("created_tm", datetime.datetime.utcnow())
+        self.watch_link: tp.Optional[str] = None
         self.__dict__.update(dct)
 
     def __getattr__(self, item: tp.Any) -> tp.Any:

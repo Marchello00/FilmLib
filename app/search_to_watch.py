@@ -1,4 +1,4 @@
-from . import session
+from app import session
 from fake_useragent import UserAgent
 import re
 import bs4

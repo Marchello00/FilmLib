@@ -8,8 +8,8 @@ from aiogram import types
 from app.buttons import Buttons
 from app import strings
 from app import db, dp, converter
-from omdb_api import FilmOMDB
-from rus_title import FilmRus
+from app.omdb_api import FilmOMDB
+from app.rus_title import FilmRus
 
 film_lists: tp.Dict[int, tp.List[FilmOMDB]] = defaultdict(list)
 last_film_msg: tp.Dict[int, int] = defaultdict(int)
@@ -349,12 +349,15 @@ async def search_internet(title: str,
     cnt = 0
     for film, i in zip(films, range(len(films))):
         await film.set_omdb()
+        if film.omdb is None:
+            continue
         cnt += film.omdb.response == 'True'
         if cnt == limit:
             films = films[:i + 1]
             break
-    films = [film for film in films if film.omdb.response == 'True']
-    if not films:
+    films_omdb = [film.omdb for film in films if
+                  film.omdb is not None and film.omdb.response == 'True']
+    if not films_omdb:
         if m_type == strings.MOVIE_TYPE:
             await message.reply(text=strings.FILM_NOT_FOUND)
         else:
@@ -362,13 +365,13 @@ async def search_internet(title: str,
         return
     global film_lists, buttons_list
     watch_links = await asyncio.gather(
-        *[search_where_to_watch(film.title) for film in films])
-    for film, link in zip(films, watch_links):
-        film.watch_link = link
-    film_lists[chat.id] = films
-    for i, film in enumerate(films):
+        *[search_where_to_watch(film.title) for film in films_omdb])
+    for film_o, link in zip(films_omdb, watch_links):
+        film_o.watch_link = link
+    film_lists[chat.id] = films_omdb
+    for i, film_o in enumerate(films_omdb):
         inlib = db.film_in_chat_db(chat_id=chat.id,
-                                   film_id=film.omdb.imdbid)
+                                   film_id=film_o.imdbid)
         film_lists[chat.id][i].inlib = inlib
         film_lists[chat.id][i].favourite = False
         film_lists[chat.id][i].watched = False
@@ -430,13 +433,11 @@ async def show_film(message: types.Message,
                     msg_id: tp.Optional[int] = None) -> None:
     films = film_lists[message.chat.id]
     film = films[index]
-    if not hasattr(film, 'watch_link'):
+    if film.watch_link is None:
         film.watch_link = await search_where_to_watch(film.title)
     markup = buttons_list[message.chat.id].get(index=index,
                                                max_len=len(films),
                                                film=film)
-    if hasattr(film, 'omdb'):
-        film = film.omdb
     if not hasattr(film, 'poster') or not film.poster or \
             film.poster == strings.NONE_OMDB:
         film.poster = strings.NO_PICTURE_URL

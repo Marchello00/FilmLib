@@ -60,7 +60,7 @@ class DB:
         film_id_s = str(film_id)
         with self.connect() as session:
             query = session.query(models.ChatXFilm).filter(
-                sql.and_(models.ChatXFilm.film_id_s == film_id_s,
+                sql.and_(models.ChatXFilm.film_id == film_id_s,
                          models.ChatXFilm.chat_id == chat_id))
             if favourite is not None:
                 query = query.filter(
@@ -78,7 +78,7 @@ class DB:
                                   models.ChatXFilm.favourite,
                                   models.ChatXFilm.created_tm).filter(
                 sql.and_(models.ChatXFilm.chat_id == chat_id,
-                         models.ChatXFilm.film_id_s ==
+                         models.ChatXFilm.film_id ==
                          models.Film.imdbid))
             if favourite is not None:
                 query = query.filter(models.ChatXFilm.favourite)
@@ -99,7 +99,7 @@ class DB:
     def add_dependence(self, chat_id: int, film_id: int) -> None:
         film_id_s = str(film_id)
         with self.connect() as session:
-            dep = models.ChatXFilm(chat_id=chat_id, film_id_s=film_id_s)
+            dep = models.ChatXFilm(chat_id=chat_id, film_id=film_id_s)
             session.add(dep)
             return
 
@@ -107,7 +107,7 @@ class DB:
         film_id_s = str(film_id)
         with self.connect() as session:
             dep = session.query(models.ChatXFilm).filter(
-                sql.and_(models.ChatXFilm.film_id_s == film_id_s,
+                sql.and_(models.ChatXFilm.film_id == film_id_s,
                          models.ChatXFilm.chat_id == chat_id)).first()
             if dep:
                 session.delete(dep)
@@ -119,7 +119,7 @@ class DB:
         with self.connect() as session:
             film = session.query(models.ChatXFilm).filter(
                 sql.and_(models.ChatXFilm.chat_id == chat_id,
-                         models.ChatXFilm.film_id_s == film_id_s)
+                         models.ChatXFilm.film_id == film_id_s)
             ).first()
             film.favourite = favourite
             return
@@ -129,7 +129,7 @@ class DB:
         with self.connect() as session:
             film = session.query(models.ChatXFilm).filter(
                 sql.and_(models.ChatXFilm.chat_id == chat_id,
-                         models.ChatXFilm.film_id_s == film_id_s)
+                         models.ChatXFilm.film_id == film_id_s)
             ).first()
             film.watched = watched
             return

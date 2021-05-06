@@ -1,6 +1,6 @@
 import typing as tp
 from app import strings
-from omdb_api import FilmOMDB
+from app.omdb_api import FilmOMDB
 
 MarkupT = tp.List[tp.List[tp.Dict[str, str]]]
 
@@ -184,7 +184,7 @@ class Buttons:
                                  url=form_film_url(film),
                                  text=film.title)
             elif bttn == strings.WATCH_CQ:
-                if film.watch_link:
+                if film.watch_link is not None:
                     add_watch_button(markup, index=index,
                                      url=film.watch_link)
         return {
