@@ -30,8 +30,9 @@ def init_bot(token):
     dp = aiogram.Dispatcher(bot)
 
 
-def init_db(db_url):
+def init_db(db_url: str):
     from app.models import Base
+    db_url = db_url.replace('postgres://', 'postgresql://')
     engine = sql.create_engine(db_url, echo=True)
     Base.metadata.create_all(engine)
     global db

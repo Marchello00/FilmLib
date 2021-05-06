@@ -18,7 +18,6 @@ async def search_where_to_watch(title: str):
         return ""
     for a in search_res.find_all('a', href=True):
         url: str = a['href']
-        match = re.match(r'/(film/\d+).*', url)
-        if match:
+        if match := re.match(r'/(film/\d+).*', url):
             return film_service + match.group(1)
     return ""
