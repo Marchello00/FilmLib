@@ -97,18 +97,14 @@ class FilmRus:
             return
         self.omdb = await omdb.get_film(name=self.title, year=self.year,
                                         m_type=self.type_omdb)
-        print(self.omdb.poster)
         if (
                 self.omdb.response == 'False'
                 or self.title.lower() != self.omdb.title.lower()
                 or self.omdb.poster == strings.NONE_OMDB
         ):
-            print(self.title)
-            print(self.omdb.title)
             self.title = self.title.replace('(', '')
             self.title = self.title.replace(')', '')
             self.omdb = await omdb.get_film(name=self.title)
-            print(self.omdb.poster)
         if not hasattr(self.omdb, 'poster') or \
                 not self.omdb.poster or \
                 self.omdb.poster == strings.NONE_OMDB:
