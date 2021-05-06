@@ -5,3 +5,4 @@ sqlalchemy
 psycopg2
 aiopg
 lxml
+fake-useragent
