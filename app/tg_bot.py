@@ -1,30 +1,33 @@
 import json
 import re
 import asyncio
+import typing as tp
 from app.search_to_watch import search_where_to_watch
 from collections import defaultdict
 from aiogram import types
 from app.buttons import Buttons
 from app import strings
 from app import db, dp, converter
+from omdb_api import FilmOMDB
+from rus_title import FilmRus
 
-film_lists = defaultdict(list)
-last_film_msg = defaultdict(int)
-buttons_list = defaultdict(Buttons)
+film_lists: tp.Dict[int, tp.List[FilmOMDB]] = defaultdict(list)
+last_film_msg: tp.Dict[int, int] = defaultdict(int)
+buttons_list: tp.Dict[int, Buttons] = defaultdict(Buttons)
 
 
 @dp.message_handler(commands=['echo'])
-async def echo(message: types.Message):
+async def echo(message: types.Message) -> None:
     await message.reply(message.text)
 
 
 @dp.message_handler(commands=['ping'])
-async def ping(message: types.Message):
+async def ping(message: types.Message) -> None:
     await message.reply('Pong!')
 
 
 @dp.message_handler(commands=['search'])
-async def search_films(message: types.Message):
+async def search_films(message: types.Message) -> None:
     if not message.get_args():
         await message.reply(strings.SEARCH_HELP)
         return
@@ -32,7 +35,7 @@ async def search_films(message: types.Message):
 
 
 @dp.message_handler(commands=['searchseries'])
-async def search_series(message: types.Message):
+async def search_series(message: types.Message) -> None:
     if not message.get_args():
         await message.reply(strings.SEARCHSERIES_HELP)
         return
@@ -42,7 +45,7 @@ async def search_series(message: types.Message):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.ADDTOLIBRARY_CQ))
-async def add_to_lib(callback_query: types.CallbackQuery):
+async def add_to_lib(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -54,7 +57,8 @@ async def add_to_lib(callback_query: types.CallbackQuery):
     if not db.film_in_db(chat.id):
         db.insert_film(film)
     if db.film_in_chat_db(chat.id, film.imdbid):
-        return callback_query.answer(text=strings.FILM_ALREADY_IN_DB)
+        await callback_query.answer(text=strings.FILM_ALREADY_IN_DB)
+        return
     db.add_dependence(chat_id=chat.id, film_id=film.imdbid)
     film_lists[chat.id][index].inlib = True
     await show_film(callback_query.message, index,
@@ -64,7 +68,7 @@ async def add_to_lib(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.REMOVEFROMLIBRARY_CQ))
-async def remove_from_lib(callback_query: types.CallbackQuery):
+async def remove_from_lib(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -76,7 +80,8 @@ async def remove_from_lib(callback_query: types.CallbackQuery):
     if not db.film_in_db(chat.id):
         db.insert_film(film)
     if not db.film_in_chat_db(chat.id, film.imdbid):
-        return callback_query.answer(text=strings.FILM_ALREADY_NOT_IN_DB)
+        await callback_query.answer(text=strings.FILM_ALREADY_NOT_IN_DB)
+        return
     db.del_dependence(chat_id=chat.id, film_id=film.imdbid)
     film_lists[chat.id][index].inlib = False
     film_lists[chat.id][index].favourite = False
@@ -88,7 +93,7 @@ async def remove_from_lib(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.PREV_CQ))
-async def show_prev_film(callback_query: types.CallbackQuery):
+async def show_prev_film(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -100,7 +105,7 @@ async def show_prev_film(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.NEXT_CQ))
-async def show_next_film(callback_query: types.CallbackQuery):
+async def show_next_film(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -112,7 +117,7 @@ async def show_next_film(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.MOREINFO_CQ))
-async def show_more(callback_query: types.CallbackQuery):
+async def show_more(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -137,7 +142,7 @@ async def show_more(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.ADDTOFAVOURITE_CQ))
-async def add_to_favourites(callback_query: types.CallbackQuery):
+async def add_to_favourites(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -151,7 +156,7 @@ async def add_to_favourites(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.REMOVEFROMFAVOURITE_CQ))
-async def remove_from_favourites(callback_query: types.CallbackQuery):
+async def remove_from_favourites(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -165,7 +170,7 @@ async def remove_from_favourites(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.WATCHED_CQ))
-async def add_to_watched(callback_query: types.CallbackQuery):
+async def add_to_watched(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -178,7 +183,7 @@ async def add_to_watched(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith(strings.REMOVEFROMWATCHED_CQ))
-async def remove_from_watched(callback_query: types.CallbackQuery):
+async def remove_from_watched(callback_query: types.CallbackQuery) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -191,7 +196,7 @@ async def remove_from_watched(callback_query: types.CallbackQuery):
 
 
 @dp.message_handler(commands=['myfilms'])
-async def get_my_films(message: types.Message):
+async def get_my_films(message: types.Message) -> None:
     chat = message.chat
     films = db.get_films_by_chat(chat_id=chat.id)
     if not films:
@@ -210,7 +215,7 @@ async def get_my_films(message: types.Message):
 
 
 @dp.message_handler(commands=['favourites'])
-async def get_favourite_films(message: types.Message):
+async def get_favourite_films(message: types.Message) -> None:
     chat = message.chat
     films = db.get_films_by_chat(chat_id=chat.id, favourite=True)
     if not films:
@@ -229,7 +234,7 @@ async def get_favourite_films(message: types.Message):
 
 
 @dp.message_handler(commands=['unwatched'])
-async def get_unwatched_films(message: types.Message):
+async def get_unwatched_films(message: types.Message) -> None:
     chat = message.chat
     films = db.get_films_by_chat(chat_id=chat.id, watched=False)
     if not films:
@@ -248,29 +253,30 @@ async def get_unwatched_films(message: types.Message):
 
 
 @dp.message_handler(commands=['stop'])
-async def stop(message: types.Message):
+async def stop(message: types.Message) -> None:
     await message.reply(strings.GOODBYE)
 
 
 @dp.message_handler(commands=['start'])
-async def start(message: types.Message):
+async def start(message: types.Message) -> None:
     await message.reply(
         '{hello}\n{help}'.format(hello=strings.HELLO, help=strings.HELP))
 
 
 @dp.message_handler(commands=['help'])
-async def helper(message: types.Message):
+async def helper(message: types.Message) -> None:
     await message.reply(strings.HELP)
 
 
 @dp.message_handler()
-async def default_search(message: types.Message):
+async def default_search(message: types.Message) -> None:
     await search_internet(message.text, message, tp2=strings.SERIES_TYPE)
 
 
-async def set_favourite(chat: types.Chat, callback_query: types.CallbackQuery,
-                        index,
-                        favourite):
+async def set_favourite(chat: types.Chat,
+                        callback_query: types.CallbackQuery,
+                        index: int,
+                        favourite: bool) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -297,9 +303,10 @@ async def set_favourite(chat: types.Chat, callback_query: types.CallbackQuery,
         await callback_query.answer(text=strings.FILM_REMOVED_FROM_FAVOURITES)
 
 
-async def set_watched(chat: types.Chat, callback_query: types.CallbackQuery,
-                      index,
-                      watched):
+async def set_watched(chat: types.Chat,
+                      callback_query: types.CallbackQuery,
+                      index: int,
+                      watched: bool) -> None:
     if not check_callback(callback_query):
         await callback_query.answer(text=strings.OLD_MSG)
         return
@@ -323,7 +330,8 @@ async def set_watched(chat: types.Chat, callback_query: types.CallbackQuery,
         await callback_query.answer(text=strings.FILM_REMOVED_FROM_WATCHED)
 
 
-async def search_media(title, m_type=strings.MOVIE_TYPE):
+async def search_media(title: str, m_type: str = strings.MOVIE_TYPE) \
+        -> tp.List[FilmRus]:
     return [film for film in
             await converter.get_russian(title, m_type=m_type, lang=None)
             if film.poster]
@@ -331,9 +339,9 @@ async def search_media(title, m_type=strings.MOVIE_TYPE):
 
 async def search_internet(title: str,
                           message: types.Message,
-                          m_type=strings.MOVIE_TYPE,
-                          limit=10,
-                          tp2=None):
+                          m_type: str = strings.MOVIE_TYPE,
+                          limit: int = 10,
+                          tp2: tp.Optional[str] = None) -> None:
     films = await search_media(title, m_type=m_type)
     chat = message.chat
     if tp2 is not None:
@@ -372,10 +380,11 @@ async def search_internet(title: str,
     buttons.add_watch()
     buttons.add_navigate()
     buttons_list[chat.id] = buttons
-    return await show_film(message, 0)
+    await show_film(message, 0)
+    return
 
 
-def check_callback(callback_query: types.CallbackQuery):
+def check_callback(callback_query: types.CallbackQuery) -> bool:
     chat = callback_query.message.chat
     return bool(
         callback_query.message.message_id == last_film_msg[chat.id]
@@ -383,7 +392,7 @@ def check_callback(callback_query: types.CallbackQuery):
     )
 
 
-def get_film_desc(film):
+def get_film_desc(film: FilmOMDB) -> str:
     return strings.SHORT_DESC.format(
         title=film.title,
         year=film.year,
@@ -391,7 +400,7 @@ def get_film_desc(film):
     )
 
 
-def get_film_full_desc(film):
+def get_film_full_desc(film: FilmOMDB) -> str:
     dct = {}
     for pattern in re.findall(r'{(\w+)}', strings.FULL_DESC):
         if not hasattr(film, pattern):
@@ -408,17 +417,7 @@ def get_film_full_desc(film):
     )
 
 
-def get_mes_id_from_cq(callback_query):
-    return callback_query.src['message']['message_id']
-
-
-def get_mes_id_from_resp(msg):
-    if msg['ok']:
-        return msg['result']['message_id']
-    return None
-
-
-def input_media_photo(poster, caption):
+def input_media_photo(poster: str, caption: str) -> tp.Dict[str, str]:
     return {
         'type': 'photo',
         'media': poster,
@@ -426,7 +425,9 @@ def input_media_photo(poster, caption):
     }
 
 
-async def show_film(message: types.Message, index, msg_id=None):
+async def show_film(message: types.Message,
+                    index: int,
+                    msg_id: tp.Optional[int] = None) -> None:
     films = film_lists[message.chat.id]
     film = films[index]
     if not hasattr(film, 'watch_link'):

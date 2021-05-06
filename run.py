@@ -1,12 +1,12 @@
+import typing as tp
 import os
 import json
 import argparse
-import asyncio
 import app
 import app.strings as strings
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Film Library telegram bot')
     parser.add_argument('--config', '-c',
                         help='path to your config.json file (README)')
@@ -17,33 +17,39 @@ def parse_args():
     return parser.parse_args()
 
 
-def load_config_file(config_path):
+def load_config_file(config_path: str) -> tp.Dict[str, str]:
     with open(config_path, 'r') as config_file:
-        config = json.load(config_file)
-        return config
+        return json.load(config_file)
 
 
-def load_config_environ(debug=False):
-    config = {
-        strings.TOKEN_CONFIG: os.environ.get(strings.TOKEN_ENVIRON),
-        strings.APIKEY_CONFIG: os.environ.get(strings.APIKEY_ENVIRON),
-        strings.DATABASE_URL_CONFIG: os.environ.get(
-            strings.DATABASE_URL_ENVIRON)
+def _not_none(arg: tp.Optional[str]) -> str:
+    if arg is None:
+        raise RuntimeError('config variable is missing')
+    return arg
+
+
+def load_config_environ(debug: bool = False) -> tp.Dict[str, str]:
+    config: tp.Dict[str, str] = {
+        strings.TOKEN_CONFIG: _not_none(os.environ.get(strings.TOKEN_ENVIRON)),
+        strings.APIKEY_CONFIG: _not_none(
+            os.environ.get(strings.APIKEY_ENVIRON)),
+        strings.DATABASE_URL_CONFIG: _not_none(os.environ.get(
+            strings.DATABASE_URL_ENVIRON))
     }
     if debug:
         if os.environ.get(strings.TOKEN_ENVIRON_DEBUG):
-            config[strings.TOKEN_CONFIG] = os.environ.get(
-                strings.TOKEN_ENVIRON_DEBUG)
+            config[strings.TOKEN_CONFIG] = _not_none(os.environ.get(
+                strings.TOKEN_ENVIRON_DEBUG))
         if os.environ.get(strings.APIKEY_ENVIRON_DEBUG):
-            config[strings.APIKEY_CONFIG] = os.environ.get(
-                strings.APIKEY_ENVIRON_DEBUG)
+            config[strings.APIKEY_CONFIG] = _not_none(os.environ.get(
+                strings.APIKEY_ENVIRON_DEBUG))
         if os.environ.get(strings.DATABASE_URL_ENVIRON_DEBUG):
-            config[strings.DATABASE_URL_CONFIG] = os.environ.get(
-                strings.DATABASE_URL_ENVIRON_DEBUG)
+            config[strings.DATABASE_URL_CONFIG] = _not_none(os.environ.get(
+                strings.DATABASE_URL_ENVIRON_DEBUG))
     return config
 
 
-def main():
+def main() -> None:
     args = parse_args()
     try:
         if args.config:

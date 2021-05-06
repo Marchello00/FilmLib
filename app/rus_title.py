@@ -1,6 +1,10 @@
+from __future__ import annotations
+import typing as tp
 import re
 import bs4
-from . import strings
+import aiohttp
+from app import strings
+from omdb_api import FilmOMDB
 
 
 class Converter:
@@ -11,10 +15,12 @@ class Converter:
 
     __site = 'https://www.themoviedb.org/'
 
-    def __init__(self, session):
+    def __init__(self, session: aiohttp.ClientSession):
         self.session = session
 
-    async def get_russian(self, search, m_type='movie', lang='en'):
+    async def get_russian(self, search: str,
+                          m_type: str = 'movie',
+                          lang: tp.Optional[str] = 'ru') -> tp.List[FilmRus]:
         url = self.__get_url(search=search, m_type=m_type, lang=lang)
         async with self.session.get(url) as resp:
             text = await resp.text()
@@ -39,7 +45,9 @@ class Converter:
             results.append(film)
         return results
 
-    def __get_url(self, search, m_type='movie', lang='ru'):
+    def __get_url(self, search: str,
+                  m_type: str = 'movie',
+                  lang: tp.Optional[str] = 'ru') -> str:
         if self.__site[-1] != '/':
             self.__site += '/'
         url = '{site}search/{type}?query={query}'.format(
@@ -53,37 +61,37 @@ class Converter:
 class FilmRus:
     retypes = {key: value for value, key in Converter.types.items()}
 
-    def __init__(self):
-        self.title = None
-        self.poster = None
-        self.url = None
-        self.date = None
-        self.year = None
-        self.type = None
-        self.plot = None
-        self.omdb = None
+    def __init__(self) -> None:
+        self.title = ""
+        self.poster = ""
+        self.url = ""
+        self.date = ""
+        self.year = ""
+        self.type = ""
+        self.plot = ""
+        self.omdb: tp.Optional[FilmOMDB] = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ''.join(
             '{name}: {value}\n'.format(name=param, value=getattr(self, param))
             for param in self.__dict__
             if not callable(param) and not param.startswith('_')
         )
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: tp.Any) -> None:
         if key == 'date' and value:
             self.year = re.findall(r'\d\d\d\d', value)[0]
         super().__setattr__(key, value)
 
-    def __type_omdb(self):
+    def __type_omdb(self) -> str:
         return self.retypes[self.type]
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> tp.Any:
         if item == 'type_omdb':
             return self.__type_omdb()
         raise AttributeError
 
-    async def set_omdb(self):
+    async def set_omdb(self) -> None:
         from . import omdb
         if self.omdb:
             return
@@ -101,7 +109,7 @@ class FilmRus:
                        'poster') or self.omdb.poster == strings.NONE_OMDB:
             self.omdb.poster = self.poster
 
-    async def get_omdb(self):
+    async def get_omdb(self) -> FilmOMDB:
         from . import omdb
         if self.omdb:
             return self.omdb

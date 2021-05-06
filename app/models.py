@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class Film(Base):
+class Film(Base):  # type: ignore
     __tablename__ = 'film'
 
     imdbid = sql.Column(sql.String, primary_key=True)
@@ -32,7 +32,7 @@ class Film(Base):
     production = sql.Column(sql.String)
     website = sql.Column(sql.String)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Film({id}, {title}, {year}, {tp})>'.format(
             id=self.imdbid,
             title=self.title,
@@ -41,7 +41,7 @@ class Film(Base):
         )
 
 
-class ChatXFilm(Base):
+class ChatXFilm(Base):  # type: ignore
     __tablename__ = 'chat_x_film'
 
     chat_id = sql.Column(sql.Integer, primary_key=True)
@@ -54,7 +54,7 @@ class ChatXFilm(Base):
     updated_tm = sql.Column(sql.TIMESTAMP, default=datetime.utcnow,
                             onupdate=datetime.utcnow)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<ChatXFilm({chat_id}, {film_id}, f:{f}, w:{w})>'.format(
             chat_id=self.chat_id,
             film_id=self.film_id,

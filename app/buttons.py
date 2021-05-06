@@ -1,17 +1,22 @@
+import typing as tp
 from app import strings
+from omdb_api import FilmOMDB
+
+MarkupT = tp.List[tp.List[tp.Dict[str, str]]]
 
 
-def form_share_link(url, text):
+def form_share_link(url: str, text: str) -> str:
     return strings.SHARE_LINK.format(
         url=url, text=text
     )
 
 
-def form_film_url(film):
+def form_film_url(film: FilmOMDB) -> str:
     return strings.FILM_URL.format(imdbid=film.imdbid)
 
 
-def add_showinfo_button(premarkup, index=strings.DEFAULT_INDEX):
+def add_showinfo_button(premarkup: MarkupT,
+                        index: int = strings.DEFAULT_INDEX) -> None:
     premarkup.append([
         {
             strings.TG_TEXT_IN_KEYBOARD: strings.MORE_INFO_BUTTON,
@@ -23,8 +28,9 @@ def add_showinfo_button(premarkup, index=strings.DEFAULT_INDEX):
     ])
 
 
-def add_favourite_button(premarkup, index=strings.DEFAULT_INDEX,
-                         favourite=False):
+def add_favourite_button(premarkup: MarkupT,
+                         index: int = strings.DEFAULT_INDEX,
+                         favourite: bool = False) -> None:
     if not favourite:
         txt = strings.ADD_TO_FAVOURITE_BUTTON
         callback_query = strings.ADDTOFAVOURITE_CQ
@@ -42,7 +48,8 @@ def add_favourite_button(premarkup, index=strings.DEFAULT_INDEX,
     ])
 
 
-def add_lib_button(premarkup, index=strings.DEFAULT_INDEX, lib=False):
+def add_lib_button(premarkup: MarkupT, index: int = strings.DEFAULT_INDEX,
+                   lib: bool = False) -> None:
     if not lib:
         txt = strings.ADD_TO_FILMLIB_BUTTON
         callback_query = strings.ADDTOLIBRARY_CQ
@@ -60,7 +67,8 @@ def add_lib_button(premarkup, index=strings.DEFAULT_INDEX, lib=False):
     ])
 
 
-def add_watched_button(premarkup, index=strings.DEFAULT_INDEX, watched=False):
+def add_watched_button(premarkup: MarkupT, index: int = strings.DEFAULT_INDEX,
+                       watched: bool = False) -> None:
     if not watched:
         txt = strings.WATCHED_BUTTON
         callback_query = strings.WATCHED_CQ
@@ -78,7 +86,7 @@ def add_watched_button(premarkup, index=strings.DEFAULT_INDEX, watched=False):
     ])
 
 
-def add_navigate_button(premarkup, index, max_len):
+def add_navigate_button(premarkup: MarkupT, index: int, max_len: int) -> None:
     page_buttons = []
     if index > 0:
         page_buttons.append({
@@ -100,8 +108,9 @@ def add_navigate_button(premarkup, index, max_len):
         premarkup.append(page_buttons)
 
 
-def add_share_button(premarkup, url, index=strings.DEFAULT_INDEX,
-                     text=strings.DEFAULT_SHARE_TEXT):
+def add_share_button(premarkup: MarkupT, url: str,
+                     index: int = strings.DEFAULT_INDEX,
+                     text: str = strings.DEFAULT_SHARE_TEXT) -> None:
     premarkup.append([{
         strings.TG_TEXT_IN_KEYBOARD:
             strings.SHARE_BUTTON,
@@ -114,7 +123,9 @@ def add_share_button(premarkup, url, index=strings.DEFAULT_INDEX,
                 callback_query=strings.SHARE_CQ)
     }])
 
-def add_watch_button(premarkup, url, index=strings.DEFAULT_INDEX):
+
+def add_watch_button(premarkup: MarkupT, url: str,
+                     index: int = strings.DEFAULT_INDEX) -> None:
     premarkup.append([{
         strings.TG_TEXT_IN_KEYBOARD:
             strings.WATCH_BUTTON,
@@ -128,36 +139,33 @@ def add_watch_button(premarkup, url, index=strings.DEFAULT_INDEX):
 
 
 class Buttons:
-    def __init__(self):
-        self.__bttns = []
+    def __init__(self) -> None:
+        self.__bttns: tp.List[str] = []
 
-    def dbg(self):
-        return self.__bttns
-
-    def add_info(self):
+    def add_info(self) -> None:
         self.__bttns.append(strings.MOREINFO_CQ)
 
-    def add_lib(self):
+    def add_lib(self) -> None:
         self.__bttns.append(strings.ADDTOLIBRARY_CQ)
 
-    def add_favourites(self):
+    def add_favourites(self) -> None:
         self.__bttns.append(strings.ADDTOFAVOURITE_CQ)
 
-    def add_watched(self):
+    def add_watched(self) -> None:
         self.__bttns.append(strings.WATCHED_CQ)
 
-    def add_navigate(self):
+    def add_navigate(self) -> None:
         self.__bttns.append(strings.NEXT_CQ)
 
-    def add_share(self):
+    def add_share(self) -> None:
         self.__bttns.append(strings.SHARE_CQ)
 
-    def add_watch(self):
+    def add_watch(self) -> None:
         self.__bttns.append(strings.WATCH_CQ)
 
-    def get(self, film, index=strings.DEFAULT_INDEX,
-            max_len=strings.DEFAULT_MAXLEN):
-        markup = []
+    def get(self, film: FilmOMDB, index: int = strings.DEFAULT_INDEX,
+            max_len: int = strings.DEFAULT_MAXLEN) -> tp.Dict[str, tp.Any]:
+        markup: MarkupT = []
         for bttn in self.__bttns:
             if bttn == strings.WATCHED_CQ and film.inlib:
                 add_watched_button(markup, index=index, watched=film.watched)

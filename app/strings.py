@@ -31,7 +31,7 @@ WATCH_CQ = 'W'
 
 # Telegram syntax
 DEFAULT_MAXLEN = 0
-DEFAULT_INDEX = '{index}'
+DEFAULT_INDEX = 0
 TG_TEXT_IN_KEYBOARD = 'text'
 TG_CALLBACK_IN_KEYBOARD = 'callback_data'
 TG_CALLBACK_FORMAT = '{callback_query}{index}'
@@ -103,7 +103,7 @@ HELP = '''
 /searchseries Игра престолов
 Чтобы посмотреть добавленные фильмы, используй команду /myfilms
 Чтобы посмотреть избранные используй /favourites
-Чтобы увидеть те фильмы, которые еще не отмечены тобой 
+Чтобы увидеть те фильмы, которые еще не отмечены тобой
 как просмотренные, напиши /unwatched
 Если ты забыл команды, можешь ввести /help
 Приятного пользования и интересных фильмов!

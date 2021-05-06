@@ -4,7 +4,7 @@ import re
 import bs4
 
 
-async def search_where_to_watch(title: str):
+async def search_where_to_watch(title: str) -> str:
     ua = UserAgent()
     film_service = 'https://www.kinopoisk.ru/'
     query = f'{film_service}index.php?kp_query={title}'

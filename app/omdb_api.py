@@ -1,17 +1,26 @@
+import typing as tp
+import aiohttp
 import json
+import datetime
 
 
 class FilmOMDB:
-    def __init__(self, dct=None):
+    def __init__(self, dct: tp.Dict[tp.Any, tp.Any]) -> None:
+        self.poster = ""
+        self.favourite = False
+        self.watched = False
+        self.inlib = False
+        self.created_tm = datetime.datetime.utcnow()
+
         self.dct = {key.lower(): value for key, value in dct.items()}
         self.__dict__.update(dct)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: tp.Any) -> tp.Any:
         if item in self.dct:
             return self.dct[item]
         raise AttributeError
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ''.join(
             '{name}: {value}\n'.format(name=param, value=getattr(self, param))
             for param in self.__dict__
@@ -32,11 +41,12 @@ class OMDB:
 
     __site = 'http://www.omdbapi.com/'
 
-    def __init__(self, key, session):
+    def __init__(self, key: str, session: aiohttp.ClientSession):
         self.__apikey = key
         self.session = session
 
-    async def get_film(self, name, year=None, m_type=None):
+    async def get_film(self, name: str, year: tp.Optional[str] = None,
+                       m_type: tp.Optional[str] = None) -> FilmOMDB:
         """
         Search film by concrete correct title
         (optional year, type)
@@ -53,7 +63,9 @@ class OMDB:
         except Exception:
             return FilmOMDB({'response': 'False'})
 
-    async def search_film(self, search, year=None, m_type=None):
+    async def search_film(self, search: str, year: tp.Optional[str] = None,
+                          m_type: tp.Optional[str] = None) \
+            -> tp.List[FilmOMDB]:
         """
         Search films/series/episodes by keywords
         :param search: Keywords
@@ -66,7 +78,7 @@ class OMDB:
             text = await resp.text()
         return [FilmOMDB(film) for film in json.loads(text)['Search']]
 
-    async def get_by_id(self, film_id):
+    async def get_by_id(self, film_id: str) -> FilmOMDB:
         """
         Search movie by IMDBid's
         :param film_id: IMDBid
@@ -77,7 +89,7 @@ class OMDB:
             text = await resp.text()
         return FilmOMDB(json.loads(text))
 
-    def __get_url(self, **kwargs):
+    def __get_url(self, **kwargs: tp.Optional[str]) -> str:
         url = self.__site
         if url[-1] != '/':
             url += '/'
@@ -93,5 +105,5 @@ class OMDB:
                                            val=str(val))
         return url
 
-    def set_apikey(self, apikey):
+    def set_apikey(self, apikey: str) -> None:
         self.__apikey = apikey
