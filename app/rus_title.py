@@ -5,6 +5,7 @@ import bs4
 import aiohttp
 from app import strings
 from app.omdb_api import FilmOMDB
+from fake_useragent import UserAgent
 
 
 class Converter:
@@ -21,8 +22,11 @@ class Converter:
     async def get_russian(self, search: str,
                           m_type: str = 'movie',
                           lang: tp.Optional[str] = 'ru') -> tp.List[FilmRus]:
+        ua = UserAgent()
         url = self.__get_url(search=search, m_type=m_type, lang=lang)
-        async with self.session.get(url) as resp:
+        async with self.session.get(url, headers={
+            'User-Agent': ua.random
+        }) as resp:
             text = await resp.text()
         soup = bs4.BeautifulSoup(text, 'lxml')
         results = []
